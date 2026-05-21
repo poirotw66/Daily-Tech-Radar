@@ -20,6 +20,48 @@
 
 在 macOS / Linux 上請從專案根目錄執行下列 PowerShell 指令（需已安裝 `pwsh`）。
 
+## Install with skills CLI
+
+將 `daily-tech-radar` skill 安裝到 Cursor、Claude Code、Codex 等 agent（使用 [skills CLI](https://github.com/vercel-labs/skills)）。安裝的是 skill 說明與腳本；**每日流水線**仍須在本機執行 PowerShell / Python（見下方「快速開始」）。
+
+**從 GitHub 安裝**（公開 repo；private 時安裝者需能 `git clone` 該 repo）：
+
+```bash
+npx skills add poirotw66/Daily-Tech-Radar --skill daily-tech-radar --agent cursor claude-code codex -y
+```
+
+安裝到目前偵測到的所有支援 agent：
+
+```bash
+npx skills add poirotw66/Daily-Tech-Radar --skill daily-tech-radar --agent '*' -y
+```
+
+僅列出 repo 內可安裝的 skill、不寫入檔案：
+
+```bash
+npx skills add poirotw66/Daily-Tech-Radar -l
+```
+
+**本機路徑安裝**（開發中、尚未 push 時）：
+
+```bash
+npx skills add "/path/to/Daily Tech Radar" --skill daily-tech-radar --agent cursor -y
+```
+
+| Agent | 典型安裝位置（專案內） |
+|--------|-------------------------|
+| Cursor / Codex | `.agents/skills/daily-tech-radar` |
+| Claude Code | `.claude/skills/daily-tech-radar` |
+
+上述目錄與 `skills-lock.json` 已列入 `.gitignore`，避免 `skills add` 產物被誤 commit。團隊若要以 lock 鎖定 skill 版本，可改為將 `skills-lock.json` 納入版控。
+
+**Clone 與 `skills add` 的差別**
+
+- **Clone 本 repo**：在 `skills/daily-tech-radar/` 跑完整 `Run-DailyRadar.ps1` 與產出目錄。
+- **`npx skills add`**：把 skill 掛進各 IDE agent；腳本路徑以安裝後的 skill 根目錄為準（見該目錄下的 `SKILL.md`）。
+
+目錄上架 [skills.sh](https://skills.sh/) 為可選（本 repo 含 `skills.sh.json`），不影響 `npx skills add`。
+
 ## 快速開始
 
 ### 每日執行（建議）
@@ -65,7 +107,8 @@
 Daily Tech Radar/
 ├── README.md
 ├── USAGE.md
-├── skills/daily-tech-radar/     # Cursor / Codex skill 本體
+├── skills.sh.json               # 可選：skills.sh 目錄分組
+├── skills/daily-tech-radar/     # Agent skill 原始碼（版控來源）
 │   ├── SKILL.md                 # Agent 操作說明與品質規則
 │   ├── config/                  # 來源、RSS、評分、品牌語氣
 │   ├── prompts/                 # 固定 LLM 步驟提示詞
@@ -92,7 +135,7 @@ Daily Tech Radar/
 
 ## 在 Cursor 中使用
 
-於對話中啟用或引用 `skills/daily-tech-radar` skill（見 `SKILL.md`）。Agent 應依 `prompts/` 與 `schemas/` 操作，並在發佈、付費 API、工作場域機密或法規/投資宣稱等情境前**暫停並請使用者確認**。
+若已用 **skills CLI** 安裝，skill 會出現在 agent 的 skills 清單；若直接開啟本 repo，則使用 `skills/daily-tech-radar/`（見 `SKILL.md`）。對話中可提及 Daily Tech Radar、每日技術雷達或審閱包以觸發。Agent 應依 `prompts/` 與 `schemas/` 操作，並在發佈、付費 API、工作場域機密或法規/投資宣稱等情境前**暫停並請使用者確認**。
 
 ## 設計原則（摘要）
 

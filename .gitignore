@@ -1,3 +1,8 @@
+# skills CLI install artifacts (npx skills add)
+.agents/
+.claude/skills/
+skills-lock.json
+
 # Daily Tech Radar generated runtime data
 skills/daily-tech-radar/data/
 skills/daily-tech-radar/output/
