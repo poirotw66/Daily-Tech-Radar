@@ -1,0 +1,23 @@
+weights:
+  relevance: 0.25
+  timeliness: 0.15
+  practicality: 0.20
+  differentiation: 0.20
+  business_value: 0.10
+  source_quality: 0.10
+
+minimum_score_to_write: 3.8
+candidate_count:
+  min: 3
+  max: 5
+
+score_scale:
+  min: 1
+  max: 5
+
+reject_if:
+  - funding_only
+  - rumor_without_primary_source
+  - pure_hype
+  - no_practical_angle
+  - confidential_or_sensitive_workplace_context

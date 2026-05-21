@@ -1,0 +1,17 @@
+publishing:
+  default_mode: review_package_only
+  require_explicit_approval: true
+  allowed_without_approval:
+    - write_markdown_review_package
+    - write_local_draft
+  requires_approval:
+    - create_cms_draft
+    - publish_cms
+    - post_social
+    - schedule_social
+
+outputs:
+  review_packages_dir: output/review_packages
+  drafts_dir: output/drafts
+  published_dir: output/published
+  logs_dir: output/logs

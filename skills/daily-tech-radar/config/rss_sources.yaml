@@ -1,0 +1,74 @@
+rss_sources:
+  - name: GitHub Blog
+    url: https://github.blog/feed/
+    enabled: true
+    priority: high
+    categories: [DevTools, AI Coding]
+
+  - name: GitHub AI & ML
+    url: https://github.blog/ai-and-ml/feed/
+    enabled: true
+    priority: high
+    categories: [AI Engineering, DevTools]
+
+  - name: Cloudflare Blog
+    url: https://blog.cloudflare.com/rss/
+    enabled: true
+    priority: high
+    categories: [Infrastructure, AI Engineering, DevTools]
+
+  - name: Vercel Blog
+    url: https://vercel.com/rss.xml
+    enabled: false
+    priority: medium
+    categories: [DevTools, Web, AI SDK]
+    disabled_reason: Returned malformed XML in the corporate proxy smoke test.
+
+  - name: Hugging Face Blog
+    url: https://huggingface.co/blog/feed.xml
+    enabled: false
+    priority: medium
+    categories: [AI Engineering, Open Source]
+    disabled_reason: Redirect loop in the corporate proxy smoke test.
+
+  - name: LangChain Blog
+    url: https://blog.langchain.com/rss/
+    enabled: false
+    priority: high
+    categories: [Agent, LLM App]
+    disabled_reason: Redirect loop in the corporate proxy smoke test.
+
+  - name: OpenAI News
+    url: https://openai.com/news/rss.xml
+    enabled: true
+    priority: high
+    categories: [AI Engineering, LLM App, Agent]
+
+  - name: InfoQ AI ML Data Engineering
+    url: https://feed.infoq.com/ai-ml-data-eng
+    enabled: true
+    priority: medium
+    categories: [Architecture, AI Engineering]
+
+  - name: Microsoft AI Developer Blogs
+    url: https://devblogs.microsoft.com/ai/feed/
+    enabled: false
+    priority: medium
+    categories: [AI Engineering, Enterprise, DevTools]
+    disabled_reason: Candidate source; enable after a local smoke test.
+
+  - name: AWS Machine Learning Blog
+    url: https://aws.amazon.com/blogs/machine-learning/feed/
+    enabled: false
+    priority: medium
+    categories: [AI Engineering, Cloud, Enterprise]
+    disabled_reason: Candidate source; enable after a local smoke test.
+
+policy:
+  note: Some feeds may fail behind corporate proxy or due to redirect loops. The orchestrator treats RSS sources as recoverable.
+  recommended_mvp_sources:
+    - GitHub Blog
+    - GitHub AI & ML
+    - Cloudflare Blog
+    - OpenAI News
+    - InfoQ AI ML Data Engineering

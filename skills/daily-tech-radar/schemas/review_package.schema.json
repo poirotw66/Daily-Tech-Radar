@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewPackage",
+  "type": "object",
+  "required": ["topic", "selection_reason", "sources", "article_markdown", "fact_check", "distribution", "seo"],
+  "properties": {
+    "topic": { "type": "string" },
+    "selection_reason": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "source_item.schema.json" }
+    },
+    "article_markdown": { "type": "string" },
+    "fact_check": {
+      "type": "object",
+      "required": ["status", "issues", "claim_source_table"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["pass", "needs_revision", "fail"]
+        },
+        "issues": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "claim_source_table": {
+          "type": "array",
+          "items": { "type": "object" }
+        }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "properties": {
+        "linkedin": { "type": "string" },
+        "threads": { "type": "string" },
+        "facebook": { "type": "string" },
+        "newsletter": { "type": "string" }
+      }
+    },
+    "seo": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "slug": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "user_confirmation_needed": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

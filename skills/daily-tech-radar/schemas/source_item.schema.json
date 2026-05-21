@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SourceItem",
+  "type": "object",
+  "required": ["source_id", "title", "url", "source_type", "publisher", "fetched_at", "raw_summary", "tags", "language"],
+  "properties": {
+    "source_id": { "type": "string" },
+    "title": { "type": "string" },
+    "url": { "type": "string", "format": "uri" },
+    "source_type": {
+      "type": "string",
+      "enum": ["official_blog", "github", "paper", "news", "discussion", "docs", "launch"]
+    },
+    "publisher": { "type": "string" },
+    "published_at": { "type": ["string", "null"], "format": "date" },
+    "fetched_at": { "type": "string", "format": "date-time" },
+    "raw_summary": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "language": {
+      "type": "string",
+      "enum": ["en", "zh", "other"]
+    },
+    "trust_level": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,54 @@
+{
+  "topic": "Production agent runtime observability is becoming the real bottleneck",
+  "selection_reason": "This topic connects agentic coding to real engineering operations: tracing, human review, and failure recovery.",
+  "sources": [
+    {
+      "source_id": "src-001",
+      "title": "Runtime behind production deep agents",
+      "url": "https://www.langchain.com/blog/runtime-behind-production-deep-agents",
+      "source_type": "official_blog",
+      "publisher": "LangChain",
+      "published_at": "2026-01-01",
+      "fetched_at": "2026-05-20T00:00:00Z",
+      "raw_summary": "Production agents need runtime support beyond prompts.",
+      "tags": ["Agent", "AI Engineering"],
+      "language": "en",
+      "trust_level": "high"
+    }
+  ],
+  "article_markdown": "## TL;DR\n- Agent 的難點正在從寫 prompt 轉向可觀測、可恢復、可審核。\n\n## 我的判斷\n我會把這件事看成 agent 產品化的基礎工程問題，而不是單純模型能力問題。\n\n## 限制與風險\n如果沒有 trace 與人工審核，agent 很容易把錯誤藏在多步流程裡。",
+  "fact_check": {
+    "status": "needs_revision",
+    "issues": [
+      {
+        "severity": "low",
+        "problem": "Article should add one more primary source before publishing.",
+        "suggested_fix": "Add official framework docs or release notes."
+      }
+    ],
+    "claim_source_table": [
+      {
+        "claim": "Production agents need runtime support beyond prompts.",
+        "source": "https://www.langchain.com/blog/runtime-behind-production-deep-agents",
+        "status": "supported",
+        "note": "Use as supporting evidence, not the only source."
+      }
+    ]
+  },
+  "distribution": {
+    "linkedin": "真正值得注意的不是 agent 會不會寫，而是團隊能不能看懂它怎麼失敗。\n\n完整文章：{URL placeholder}",
+    "threads": "1/ Agent 產品化後，runtime 會比 prompt 更難。\n2/ 沒有 trace，就很難 debug 多步決策。\n3/ 完整文章：{URL placeholder}",
+    "facebook": "最近很多人在做 agent，我覺得可以先檢查三件事：trace、人工審核、失敗重跑。\n\n完整文章：{URL placeholder}",
+    "newsletter": "本期觀察 agent runtime、可觀測性與人類審核如何影響 production readiness。"
+  },
+  "seo": {
+    "title": "Agent 產品化真正困難的地方：Runtime、Trace 與人工審核",
+    "description": "從工程流程角度看 agent runtime、可觀測性與 human-in-the-loop 為什麼重要。",
+    "slug": "agent-runtime-observability",
+    "tags": ["Agent", "AI Engineering", "DevTools"]
+  },
+  "user_confirmation_needed": [
+    "是否要加入你自己的 agent 開發或審稿經驗？",
+    "是否要連到顧問服務或 demo project？"
+  ]
+}

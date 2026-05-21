@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArticleRecord",
+  "type": "object",
+  "required": ["article_id", "date", "status", "title", "slug", "category", "tags", "summary", "body_markdown", "sources", "fact_check_status"],
+  "properties": {
+    "article_id": { "type": "string" },
+    "date": { "type": "string", "format": "date" },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "review", "approved", "published", "archived"]
+    },
+    "title": { "type": "string" },
+    "slug": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": ["AI Coding", "LLM App", "Automation", "FinTech AI", "DevTools", "Security", "Data", "Agent", "Architecture", "Open Source"]
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "summary": { "type": "string" },
+    "body_markdown": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "fact_check_status": {
+      "type": "string",
+      "enum": ["pass", "needs_revision", "fail"]
+    },
+    "review_notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "published_at": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,102 @@
+sources:
+  - name: OpenAI News
+    type: official_blog
+    url: https://openai.com/news/
+    priority: high
+    categories: [AI Engineering, LLM App, Agent]
+
+  - name: OpenAI Docs
+    type: docs
+    url: https://platform.openai.com/docs/
+    priority: high
+    categories: [AI Engineering, LLM App, Agent]
+
+  - name: Anthropic News
+    type: official_blog
+    url: https://www.anthropic.com/news
+    priority: high
+    categories: [AI Engineering, Agent]
+
+  - name: Anthropic Engineering
+    type: official_blog
+    url: https://www.anthropic.com/engineering
+    priority: high
+    categories: [AI Engineering, Agent]
+
+  - name: GitHub Blog
+    type: official_blog
+    url: https://github.blog/
+    priority: high
+    categories: [DevTools, AI Coding]
+
+  - name: GitHub Trending
+    type: github
+    url: https://github.com/trending
+    priority: medium
+    categories: [DevTools, Open Source]
+
+  - name: Cloudflare Blog
+    type: official_blog
+    url: https://blog.cloudflare.com/
+    priority: medium
+    categories: [Infrastructure, AI Engineering]
+
+  - name: Vercel Blog
+    type: official_blog
+    url: https://vercel.com/blog
+    priority: medium
+    categories: [DevTools, Web]
+
+  - name: Supabase Blog
+    type: official_blog
+    url: https://supabase.com/blog
+    priority: medium
+    categories: [DevTools, Data]
+
+  - name: LangChain Blog
+    type: official_blog
+    url: https://blog.langchain.com/
+    priority: high
+    categories: [Agent, LLM App]
+
+  - name: Hugging Face Blog
+    type: official_blog
+    url: https://huggingface.co/blog
+    priority: medium
+    categories: [AI Engineering, Open Source]
+
+  - name: Hacker News
+    type: discussion
+    url: https://news.ycombinator.com/
+    priority: medium
+    categories: [DevTools, AI Engineering]
+
+  - name: arXiv cs.CL
+    type: paper
+    url: https://arxiv.org/list/cs.CL/recent
+    priority: medium
+    categories: [LLM, Research]
+
+  - name: arXiv cs.AI
+    type: paper
+    url: https://arxiv.org/list/cs.AI/recent
+    priority: medium
+    categories: [AI Engineering, Research]
+
+  - name: InfoQ AI
+    type: news
+    url: https://www.infoq.com/ai-ml-data-eng/
+    priority: medium
+    categories: [Architecture, AI Engineering]
+
+source_policy:
+  primary_preference:
+    - official_blog
+    - docs
+    - github
+    - paper
+  supporting_only:
+    - discussion
+    - news
+  freshness_days: 7
+  max_sources_per_run: 40

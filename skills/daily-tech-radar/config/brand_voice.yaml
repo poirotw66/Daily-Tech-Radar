@@ -1,0 +1,45 @@
+language: zh-TW
+tone:
+  - practical
+  - clear
+  - technical
+  - business-aware
+  - opinionated-with-evidence
+
+required_sections:
+  - TL;DR
+  - 發生了什麼？
+  - 為什麼值得注意？
+  - 可以怎麼應用？
+  - 限制與風險
+  - 我的判斷
+  - 延伸閱讀
+
+preferred_phrases:
+  - 真正值得注意的不是...而是...
+  - 我會把它看成...
+  - 如果放到企業場景...
+  - 對小團隊來說...
+
+avoid:
+  - 顛覆
+  - 革命性
+  - 史詩級
+  - 保證
+  - 必然
+  - 完全取代
+  - 無痛導入
+
+article_lengths:
+  daily_note:
+    min_words: 800
+    max_words: 1500
+  deep_dive:
+    min_words: 2000
+    max_words: 4000
+  weekly_digest:
+    min_words: 1500
+    max_words: 2500
+  project_build_log:
+    min_words: 1500
+    max_words: 3000

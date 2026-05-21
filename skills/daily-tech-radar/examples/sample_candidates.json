@@ -1,0 +1,36 @@
+[
+  {
+    "candidate_id": "agent-runtime-observability",
+    "title": "Production agent runtime observability is becoming the real bottleneck",
+    "core_question": "Why do durable execution, tracing, and human review matter more as agents move into production?",
+    "why_now": "Recent agent frameworks increasingly emphasize runtime, tracing, guardrails, and review workflows.",
+    "target_reader": "engineer",
+    "content_angle": "technical_explainer",
+    "required_sources": ["src-001"],
+    "scores": {
+      "relevance": 5,
+      "timeliness": 4,
+      "practicality": 5,
+      "differentiation": 4,
+      "business_value": 4,
+      "source_quality": 5
+    }
+  },
+  {
+    "candidate_id": "ai-funding-round",
+    "title": "Another AI startup raises a large round",
+    "core_question": "Does the funding news indicate a practical technical shift?",
+    "why_now": "Funding announcement this week.",
+    "target_reader": "mixed",
+    "content_angle": "opinion",
+    "required_sources": ["src-002"],
+    "scores": {
+      "relevance": 2,
+      "timeliness": 4,
+      "practicality": 1,
+      "differentiation": 1,
+      "business_value": 2,
+      "source_quality": 2
+    }
+  }
+]

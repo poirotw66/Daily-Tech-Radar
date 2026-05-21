@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TopicCandidate",
+  "type": "object",
+  "required": ["candidate_id", "title", "core_question", "why_now", "target_reader", "content_angle", "required_sources"],
+  "properties": {
+    "candidate_id": { "type": "string" },
+    "title": { "type": "string" },
+    "core_question": { "type": "string" },
+    "why_now": { "type": "string" },
+    "target_reader": {
+      "type": "string",
+      "enum": ["engineer", "pm", "small_business", "fintech", "mixed"]
+    },
+    "content_angle": {
+      "type": "string",
+      "enum": ["technical_explainer", "practical_guide", "opinion", "tool_review", "workflow_case", "weekly_digest"]
+    },
+    "required_sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "scores": {
+      "type": "object",
+      "properties": {
+        "relevance": { "type": "number", "minimum": 1, "maximum": 5 },
+        "timeliness": { "type": "number", "minimum": 1, "maximum": 5 },
+        "practicality": { "type": "number", "minimum": 1, "maximum": 5 },
+        "differentiation": { "type": "number", "minimum": 1, "maximum": 5 },
+        "business_value": { "type": "number", "minimum": 1, "maximum": 5 },
+        "source_quality": { "type": "number", "minimum": 1, "maximum": 5 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

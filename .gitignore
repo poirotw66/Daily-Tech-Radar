@@ -1,0 +1,17 @@
+# Daily Tech Radar generated runtime data
+skills/daily-tech-radar/data/
+skills/daily-tech-radar/output/
+skills/daily-tech-radar/memory/
+
+# Keep reusable examples under version control
+!skills/daily-tech-radar/examples/
+!skills/daily-tech-radar/examples/**
+
+# Local Python/cache artifacts
+__pycache__/
+*.pyc
+%TEMP%/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
