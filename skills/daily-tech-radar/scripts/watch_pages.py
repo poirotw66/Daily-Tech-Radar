@@ -255,24 +255,54 @@ def evaluate_page(
     return row, items, new_state
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=Path, default=Path(__file__).resolve().parent.parent / "config" / "page_watch.yaml")
-    parser.add_argument("--state", type=Path, default=Path(__file__).resolve().parent.parent / "memory" / "page_watch_state.json")
-    parser.add_argument("--run-date", default=today_iso())
-    parser.add_argument("--output-items", type=Path, help="JSON array of synthetic source items when changed")
-    parser.add_argument("--output-brief", type=Path)
-    parser.add_argument("--max-chars", type=int, default=12000)
-    parser.add_argument("--link-limit", type=int, default=40)
-    parser.add_argument("--timeout", type=int, default=60)
-    parser.add_argument("--insecure-skip-tls-verify", action="store_true")
-    parser.add_argument("--emit-baseline", action="store_true", help="Treat first-seen pages as changed (for testing)")
-    args = parser.parse_args()
+def state_summary(pages: list[dict], state: dict) -> list[dict]:
+    state_pages = state.get("pages", {})
+    rows: list[dict] = []
+    for page in pages:
+        key = page_key(str(page.get("name", "")))
+        slice_ = state_pages.get(key, {})
+        urls = slice_.get("article_link_urls") or []
+        rows.append(
+            {
+                "name": page.get("name"),
+                "enabled": page.get("enabled", True),
+                "url": page.get("url"),
+                "tracked_links": len(urls),
+                "last_checked_at": slice_.get("last_checked_at", ""),
+                "last_changed_at": slice_.get("last_changed_at", ""),
+                "has_baseline": bool(urls or slice_.get("content_hash")),
+                "detection_mode": "links" if urls else ("fingerprint" if slice_.get("content_hash") else "none"),
+            }
+        )
+    return rows
 
-    pages = [p for p in load_page_watch(args.config) if p.get("enabled", True) and p.get("url")]
-    state = load_state(args.state)
+
+def run_watch_scan(
+    *,
+    config: Path,
+    state_path: Path,
+    run_date: str | None = None,
+    max_chars: int = 12000,
+    link_limit: int = 40,
+    timeout: int = 60,
+    insecure_skip_tls_verify: bool = False,
+    emit_baseline: bool = False,
+    only_enabled: bool = True,
+    page_names: list[str] | None = None,
+    output_items: Path | None = None,
+    output_brief: Path | None = None,
+) -> dict:
+    run_date = run_date or today_iso()
+    all_pages = load_page_watch(config)
+    pages = [p for p in all_pages if p.get("url")]
+    if page_names:
+        wanted = {n.strip().lower() for n in page_names}
+        pages = [p for p in pages if str(p.get("name", "")).strip().lower() in wanted]
+    elif only_enabled:
+        pages = [p for p in pages if p.get("enabled", True)]
+
+    state = load_state(state_path)
     state_pages = state.setdefault("pages", {})
-
     changed_items: list[dict] = []
     brief_rows: list[dict] = []
 
@@ -282,8 +312,8 @@ def main() -> int:
         key = page_key(name)
         body, error = fetch_bytes(
             url,
-            timeout=args.timeout,
-            insecure_skip_tls_verify=args.insecure_skip_tls_verify,
+            timeout=timeout,
+            insecure_skip_tls_verify=insecure_skip_tls_verify,
         )
         if body is None:
             brief_rows.append(
@@ -301,10 +331,10 @@ def main() -> int:
             page,
             body,
             state_pages.get(key, {}),
-            max_chars=args.max_chars,
-            emit_baseline=args.emit_baseline,
-            run_date=args.run_date,
-            link_limit=args.link_limit,
+            max_chars=max_chars,
+            emit_baseline=emit_baseline,
+            run_date=run_date,
+            link_limit=link_limit,
         )
         state_pages[key] = new_slice
         changed_items.extend(items)
@@ -312,19 +342,58 @@ def main() -> int:
 
     state["updated_at"] = now_utc()
     state["version"] = 2
-    save_state(args.state, state)
+    save_state(state_path, state)
 
-    if args.output_items:
-        args.output_items.parent.mkdir(parents=True, exist_ok=True)
-        args.output_items.write_text(json.dumps(changed_items, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    if args.output_brief:
-        write_brief(args.output_brief, args.run_date, brief_rows)
+    if output_items is not None:
+        output_items.parent.mkdir(parents=True, exist_ok=True)
+        output_items.write_text(json.dumps(changed_items, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if output_brief is not None:
+        write_brief(output_brief, run_date, brief_rows)
+
+    return {
+        "run_date": run_date,
+        "checked": len(brief_rows),
+        "changed": len(changed_items),
+        "items": changed_items,
+        "results": brief_rows,
+        "state_updated_at": state["updated_at"],
+        "summaries": state_summary(all_pages, state),
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=Path, default=Path(__file__).resolve().parent.parent / "config" / "page_watch.yaml")
+    parser.add_argument("--state", type=Path, default=Path(__file__).resolve().parent.parent / "memory" / "page_watch_state.json")
+    parser.add_argument("--run-date", default=today_iso())
+    parser.add_argument("--output-items", type=Path, help="JSON array of synthetic source items when changed")
+    parser.add_argument("--output-brief", type=Path)
+    parser.add_argument("--max-chars", type=int, default=12000)
+    parser.add_argument("--link-limit", type=int, default=40)
+    parser.add_argument("--timeout", type=int, default=60)
+    parser.add_argument("--insecure-skip-tls-verify", action="store_true")
+    parser.add_argument("--emit-baseline", action="store_true", help="Treat first-seen pages as changed (for testing)")
+    args = parser.parse_args()
+
+    report = run_watch_scan(
+        config=args.config,
+        state_path=args.state,
+        run_date=args.run_date,
+        max_chars=args.max_chars,
+        link_limit=args.link_limit,
+        timeout=args.timeout,
+        insecure_skip_tls_verify=args.insecure_skip_tls_verify,
+        emit_baseline=args.emit_baseline,
+        only_enabled=True,
+        output_items=args.output_items,
+        output_brief=args.output_brief,
+    )
 
     print(
         json.dumps(
             {
-                "checked": len(brief_rows),
-                "changed": len(changed_items),
+                "checked": report["checked"],
+                "changed": report["changed"],
                 "output_items": str(args.output_items) if args.output_items else "",
             },
             ensure_ascii=False,

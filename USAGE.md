@@ -31,7 +31,7 @@ RSS 清單在 `skills/daily-tech-radar/config/rss_sources.yaml`（`enabled: true
 python3 skills/daily-tech-radar/scripts/sources_console.py
 ```
 
-預設開啟 http://127.0.0.1:8765/ ，可勾選啟用、新增 Feed、單筆或全部 smoke test。
+預設開啟 http://127.0.0.1:8765/ 。分頁 **RSS 來源**（勾選啟用、探索 Feed、測試）與 **網頁監控**（Page Watch：啟停、新增列表頁、掃描連結比對、查看追蹤連結數與新 URL 結果）。
 
 ### 指令列
 

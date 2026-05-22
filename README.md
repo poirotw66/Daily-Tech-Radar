@@ -106,11 +106,11 @@ npx skills add "/path/to/Daily Tech Radar" --skill daily-tech-radar --agent curs
 ### 管理 RSS 來源
 
 ```bash
-python3 skills/daily-tech-radar/scripts/sources_console.py   # 本機主控台
+python3 skills/daily-tech-radar/scripts/sources_console.py   # RSS + Page Watch 主控台
 python3 skills/daily-tech-radar/scripts/manage_sources.py list
 ```
 
-編輯 `skills/daily-tech-radar/config/rss_sources.yaml` 亦可；主控台與 CLI 會寫回同一檔案。
+編輯 `config/rss_sources.yaml` 或 `config/page_watch.yaml` 亦可；主控台與 CLI 會寫回同一檔案。
 
 ## 專案結構
 

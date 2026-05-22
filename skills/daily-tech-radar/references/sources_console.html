@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Tech Radar — RSS 來源主控台</title>
+  <title>Daily Tech Radar — 來源主控台</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -208,16 +208,48 @@
     }
     .discover-box ul { margin: .4rem 0 0; padding-left: 1.1rem; color: var(--muted); }
     .empty { text-align: center; padding: 2rem; color: var(--muted); }
+
+    .tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .tab {
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: .45rem 1rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .tab:hover { color: var(--text); border-color: var(--muted); }
+    .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .hint { font-size: .82rem; color: var(--muted); margin: 0 0 1rem; line-height: 1.45; }
+    .scan-result { margin-top: .75rem; }
+    .scan-result h4 { margin: 0 0 .35rem; font-size: .9rem; }
+    .new-link { font-family: "JetBrains Mono", monospace; font-size: .75rem; margin: .25rem 0; word-break: break-all; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>RSS 來源主控台</h1>
-      <p>Daily Tech Radar · 寫入 <code>config/rss_sources.yaml</code> · 僅 <strong>enabled</strong> 來源會進入每日擷取</p>
+      <h1>來源主控台</h1>
+      <p>Daily Tech Radar · RSS：<code>config/rss_sources.yaml</code> · 網頁監控：<code>config/page_watch.yaml</code></p>
     </header>
 
-    <div class="stats">
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab active" data-tab="rss" role="tab" aria-selected="true">RSS 來源</button>
+      <button type="button" class="tab" data-tab="watch" role="tab" aria-selected="false">網頁監控（Page Watch）</button>
+    </nav>
+
+    <div id="panel-rss" class="tab-panel active" role="tabpanel">
+    <div class="stats" id="rss-stats">
       <div class="stat"><div class="label">總來源</div><div class="value" id="stat-total">—</div></div>
       <div class="stat"><div class="label">已啟用</div><div class="value" id="stat-on" style="color:var(--ok)">—</div></div>
       <div class="stat"><div class="label">已停用</div><div class="value" id="stat-off">—</div></div>
@@ -273,6 +305,64 @@
         </div>
       </div>
     </section>
+    </div>
+
+    <div id="panel-watch" class="tab-panel" role="tabpanel">
+      <p class="hint">適用沒有 RSS 的列表頁（例如 Claude Blog）。以<strong>文章連結列表</strong>比對新 URL；第一次掃描只建立基準，之後新連結才會進入每日 merge。</p>
+      <div class="stats" id="watch-stats">
+        <div class="stat"><div class="label">監控頁</div><div class="value" id="watch-stat-total">—</div></div>
+        <div class="stat"><div class="label">已啟用</div><div class="value" id="watch-stat-on" style="color:var(--ok)">—</div></div>
+        <div class="stat"><div class="label">追蹤連結總數</div><div class="value" id="watch-stat-links">—</div></div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>監控頁清單</h2>
+          <div class="toolbar">
+            <input type="search" id="watch-filter" placeholder="搜尋名稱或 URL…" aria-label="搜尋監控頁" />
+            <button type="button" class="btn btn-primary" id="btn-watch-scan-all">掃描已啟用</button>
+            <button type="button" class="btn btn-ghost" id="btn-watch-reload">重新載入</button>
+          </div>
+        </div>
+        <div class="source-list" id="watch-list"></div>
+        <div class="field full scan-result" id="watch-scan-result" hidden style="padding:0 1.15rem 1rem"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>新增監控頁</h2></div>
+        <div class="form-grid">
+          <div class="field">
+            <label>顯示名稱</label>
+            <input type="text" id="watch-add-name" placeholder="Claude Blog" />
+          </div>
+          <div class="field">
+            <label>優先級</label>
+            <select id="watch-add-priority">
+              <option value="high">high</option>
+              <option value="medium" selected>medium</option>
+              <option value="low">low</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>列表頁 URL</label>
+            <input type="url" id="watch-add-url" placeholder="https://claude.com/blog" />
+          </div>
+          <div class="field">
+            <label>分類（逗號分隔）</label>
+            <input type="text" id="watch-add-categories" value="Agent, AI Engineering, LLM App" />
+          </div>
+          <div class="field">
+            <label>檢查間隔（小時）</label>
+            <input type="number" id="watch-add-interval" min="1" max="168" value="24" />
+          </div>
+          <div class="field full form-actions">
+            <button type="button" class="btn" id="btn-watch-preset-claude">Claude Blog 預設</button>
+            <button type="button" class="btn" id="btn-watch-preset-anthropic">Anthropic News 預設</button>
+            <button type="button" class="btn btn-primary" id="btn-watch-add">新增監控頁</button>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 
   <div id="toast" role="status"></div>
@@ -447,6 +537,190 @@
 
     document.getElementById('filter').addEventListener('input', () => renderList(allSources));
     document.getElementById('btn-reload').addEventListener('click', loadSources);
+
+    /* Tabs */
+    const tabButtons = document.querySelectorAll('.tab');
+    const panels = { rss: document.getElementById('panel-rss'), watch: document.getElementById('panel-watch') };
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.tab;
+        tabButtons.forEach(b => {
+          b.classList.toggle('active', b.dataset.tab === id);
+          b.setAttribute('aria-selected', b.dataset.tab === id ? 'true' : 'false');
+        });
+        Object.entries(panels).forEach(([key, el]) => el.classList.toggle('active', key === id));
+        if (id === 'watch' && !watchLoaded) loadPageWatch().catch(e => toast(String(e), false));
+      });
+    });
+
+    /* Page watch */
+    const watchListEl = document.getElementById('watch-list');
+    const watchScanBox = document.getElementById('watch-scan-result');
+    let allWatchPages = [];
+    let watchSummaries = {};
+    let watchLoaded = false;
+
+    function summaryFor(name) {
+      return watchSummaries[name] || {};
+    }
+
+    function updateWatchStats(pages, summaries) {
+      const on = pages.filter(p => p.enabled !== false).length;
+      const links = summaries.reduce((n, s) => n + (s.tracked_links || 0), 0);
+      document.getElementById('watch-stat-total').textContent = pages.length;
+      document.getElementById('watch-stat-on').textContent = on;
+      document.getElementById('watch-stat-links').textContent = links;
+    }
+
+    function renderWatchList(pages) {
+      const q = document.getElementById('watch-filter').value.trim().toLowerCase();
+      const filtered = pages.filter(p => {
+        const blob = (p.name + ' ' + (p.url||'')).toLowerCase();
+        return !q || blob.includes(q);
+      });
+      if (!filtered.length) {
+        watchListEl.innerHTML = '<div class="empty">沒有符合的監控頁</div>';
+        return;
+      }
+      watchListEl.innerHTML = filtered.map(p => {
+        const enabled = p.enabled !== false;
+        const sum = summaryFor(p.name);
+        const badge = enabled ? '<span class="badge badge-on">ON</span>' : '<span class="badge badge-off">OFF</span>';
+        const mode = sum.detection_mode || 'none';
+        const tracked = sum.tracked_links != null ? sum.tracked_links : '—';
+        const baseline = sum.has_baseline ? '' : ' <span class="badge badge-warn">待建立基準</span>';
+        return `
+          <article class="source-card ${enabled ? '' : 'off'}" data-watch-name="${escapeHtml(p.name)}">
+            <label class="switch" title="${enabled ? '停用' : '啟用'}">
+              <input type="checkbox" data-watch-toggle="${escapeHtml(p.name)}" ${enabled ? 'checked' : ''} />
+              <span class="slider"></span>
+            </label>
+            <div>
+              <h3 class="source-title">${escapeHtml(p.name)}</h3>
+              <div class="meta">${badge}<span>${escapeHtml(p.priority || 'medium')}</span>
+                <span>追蹤 ${tracked} 連結</span><span>${escapeHtml(mode)}</span>${baseline}</div>
+              <div class="feed-url">${escapeHtml(p.url || '')}</div>
+              ${sum.last_checked_at ? `<div class="reason" style="color:var(--muted)">上次檢查：${escapeHtml(sum.last_checked_at)}</div>` : ''}
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn" data-watch-scan="${escapeHtml(p.name)}">掃描</button>
+            </div>
+          </article>`;
+      }).join('');
+
+      watchListEl.querySelectorAll('[data-watch-toggle]').forEach(cb => {
+        cb.addEventListener('change', () => toggleWatchPage(cb.dataset.watchToggle, cb.checked));
+      });
+      watchListEl.querySelectorAll('[data-watch-scan]').forEach(btn => {
+        btn.addEventListener('click', () => scanWatch(btn.dataset.watchScan));
+      });
+    }
+
+    function showScanReport(data) {
+      watchScanBox.hidden = false;
+      watchScanBox.className = 'field full scan-result discover-box';
+      const rows = data.results || [];
+      let html = `<strong>掃描完成</strong> · 檢查 ${data.checked} 頁 · 新候選 ${data.changed} 筆`;
+      if (!rows.length) {
+        watchScanBox.innerHTML = html + '<p style="margin:.5rem 0 0;color:var(--muted)">無結果</p>';
+        return;
+      }
+      html += '<ul style="margin:.5rem 0 0;padding-left:1.1rem">';
+      for (const r of rows) {
+        let status = r.error ? 'ERROR' : (r.first_seen ? 'BASELINE' : (r.changed ? 'CHANGED' : 'unchanged'));
+        html += `<li><strong>${escapeHtml(r.name)}</strong> — ${status}`;
+        if (r.link_count != null) html += ` · ${r.link_count} 連結`;
+        if (r.error) html += ` · ${escapeHtml(r.error)}`;
+        html += '</li>';
+        const links = r.new_links || [];
+        for (const link of links) {
+          html += `<li class="new-link">+ ${escapeHtml(link.title || link.url)} — ${escapeHtml(link.url)}</li>`;
+        }
+      }
+      html += '</ul>';
+      watchScanBox.innerHTML = html;
+    }
+
+    async function loadPageWatch() {
+      const res = await fetch('/api/page-watch');
+      const data = await res.json();
+      allWatchPages = data.pages || [];
+      watchSummaries = {};
+      (data.summaries || []).forEach(s => { watchSummaries[s.name] = s; });
+      updateWatchStats(allWatchPages, data.summaries || []);
+      renderWatchList(allWatchPages);
+      watchLoaded = true;
+    }
+
+    async function toggleWatchPage(name, enabled) {
+      const res = await fetch('/api/page-watch/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, enabled })
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || '切換失敗', false); await loadPageWatch(); return; }
+      toast(`${name} → ${enabled ? '已啟用' : '已停用'}`);
+      await loadPageWatch();
+    }
+
+    async function scanWatch(name) {
+      toast(name ? `掃描 ${name}…` : '掃描已啟用監控頁…');
+      const body = { insecure_skip_tls_verify: true };
+      if (name) body.name = name;
+      const res = await fetch('/api/page-watch/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || '掃描失敗', false); return; }
+      showScanReport(data);
+      if (data.changed > 0) toast(`發現 ${data.changed} 筆新連結候選`);
+      else toast('掃描完成（無新連結）');
+      watchSummaries = {};
+      (data.summaries || []).forEach(s => { watchSummaries[s.name] = s; });
+      updateWatchStats(allWatchPages, data.summaries || []);
+      renderWatchList(allWatchPages);
+    }
+
+    document.getElementById('btn-watch-scan-all').addEventListener('click', () => scanWatch(''));
+    document.getElementById('btn-watch-reload').addEventListener('click', loadPageWatch);
+    document.getElementById('watch-filter').addEventListener('input', () => renderWatchList(allWatchPages));
+
+    document.getElementById('btn-watch-preset-claude').addEventListener('click', () => {
+      document.getElementById('watch-add-name').value = 'Claude Blog';
+      document.getElementById('watch-add-url').value = 'https://claude.com/blog';
+      document.getElementById('watch-add-priority').value = 'high';
+      document.getElementById('watch-add-categories').value = 'Agent, AI Engineering, LLM App';
+    });
+    document.getElementById('btn-watch-preset-anthropic').addEventListener('click', () => {
+      document.getElementById('watch-add-name').value = 'Anthropic Newsroom';
+      document.getElementById('watch-add-url').value = 'https://www.anthropic.com/news';
+      document.getElementById('watch-add-priority').value = 'high';
+      document.getElementById('watch-add-categories').value = 'AI Engineering, LLM App';
+    });
+
+    document.getElementById('btn-watch-add').addEventListener('click', async () => {
+      const payload = {
+        name: document.getElementById('watch-add-name').value.trim(),
+        url: document.getElementById('watch-add-url').value.trim(),
+        categories: document.getElementById('watch-add-categories').value.trim(),
+        priority: document.getElementById('watch-add-priority').value,
+        check_interval_hours: parseInt(document.getElementById('watch-add-interval').value, 10) || 24,
+        enabled: true
+      };
+      if (!payload.name || !payload.url) { toast('請填寫名稱與列表頁 URL', false); return; }
+      const res = await fetch('/api/page-watch/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || '新增失敗', false); return; }
+      toast(`已新增監控 ${payload.name}`);
+      await loadPageWatch();
+    });
 
     loadSources().catch(e => toast(String(e), false));
   </script>

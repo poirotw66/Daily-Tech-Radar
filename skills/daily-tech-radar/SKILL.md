@@ -31,7 +31,7 @@ Use this skill to run a guarded content workflow, not a free-form news summarize
   - `scripts/run_daily_radar.sh` same pipeline on macOS/Linux (bash + Python 3).
   - `scripts/html_extract.py` extracts article/main body text from fetched HTML.
   - `scripts/manage_sources.py` lists/enables/disables/adds RSS feeds in `config/rss_sources.yaml`.
-  - `scripts/sources_console.py` local web UI (http://127.0.0.1:8765) for the same RSS settings.
+  - `scripts/sources_console.py` local web UI (http://127.0.0.1:8765) for RSS and page watch (`/api/page-watch`, scan/toggle/add).
   - `scripts/watch_pages.py` checks listing pages via new article URLs (`page_link_extract.py`), with fingerprint fallback.
   - `scripts/manage_page_watch.py` lists/adds pages and runs a manual watch scan.
   - `scripts/fetch_rss.py` fetches RSS/Atom feeds with the Python standard library.

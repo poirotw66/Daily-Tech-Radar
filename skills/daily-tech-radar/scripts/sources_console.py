@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local web console to enable/disable and add RSS sources."""
+"""Local web console for RSS sources and page watch (no-RSS listing pages)."""
 
 from __future__ import annotations
 
@@ -15,14 +15,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fetch_rss
 from discover_rss import discover
 from manage_sources import default_config_path
+from page_watch_io import find_page, load_page_watch, save_page_watch
 from rss_config_io import find_source, load_rss_sources, save_rss_sources
+from watch_pages import load_state, run_watch_scan, state_summary
 
 
 HTML_PATH = Path(__file__).resolve().parent.parent / "references" / "sources_console.html"
 
 
+def default_page_watch_config() -> Path:
+    return Path(__file__).resolve().parent.parent / "config" / "page_watch.yaml"
+
+
+def default_page_watch_state() -> Path:
+    return Path(__file__).resolve().parent.parent / "memory" / "page_watch_state.json"
+
+
 class ConsoleHandler(BaseHTTPRequestHandler):
     config_path: Path = default_config_path()
+    page_watch_path: Path = default_page_watch_config()
+    page_watch_state_path: Path = default_page_watch_state()
     insecure_tls: bool = True
 
     def log_message(self, format: str, *args) -> None:
@@ -41,6 +53,17 @@ class ConsoleHandler(BaseHTTPRequestHandler):
         raw = self.rfile.read(length) if length else b"{}"
         return json.loads(raw.decode("utf-8") or "{}")
 
+    def _page_watch_payload(self) -> dict:
+        pages = load_page_watch(self.page_watch_path)
+        state = load_state(self.page_watch_state_path)
+        return {
+            "pages": pages,
+            "config": str(self.page_watch_path),
+            "state_path": str(self.page_watch_state_path),
+            "state_updated_at": state.get("updated_at", ""),
+            "summaries": state_summary(pages, state),
+        }
+
     def do_GET(self) -> None:
         path = urlparse(self.path).path
         if path in ("/", "/index.html"):
@@ -55,11 +78,19 @@ class ConsoleHandler(BaseHTTPRequestHandler):
             sources = load_rss_sources(self.config_path)
             self._send_json(200, {"sources": sources, "config": str(self.config_path)})
             return
+        if path == "/api/page-watch":
+            self._send_json(200, self._page_watch_payload())
+            return
         self._send_json(404, {"error": "not found"})
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
         data = self._read_json()
+
+        if path.startswith("/api/page-watch"):
+            self._post_page_watch(path, data)
+            return
+
         sources = load_rss_sources(self.config_path)
 
         if path == "/api/sources/toggle":
@@ -144,22 +175,106 @@ class ConsoleHandler(BaseHTTPRequestHandler):
 
         self._send_json(404, {"error": "not found"})
 
+    def _post_page_watch(self, path: str, data: dict) -> None:
+        pages = load_page_watch(self.page_watch_path)
+
+        if path == "/api/page-watch/toggle":
+            name = str(data.get("name", "")).strip()
+            page = find_page(pages, name)
+            if not page:
+                self._send_json(404, {"error": f"Unknown page: {name}"})
+                return
+            page["enabled"] = bool(data.get("enabled", True))
+            save_page_watch(self.page_watch_path, pages)
+            self._send_json(200, {"ok": True, "name": name, "enabled": page["enabled"]})
+            return
+
+        if path == "/api/page-watch/add":
+            name = str(data.get("name", "")).strip()
+            url = str(data.get("url", "")).strip()
+            if not name or not url:
+                self._send_json(400, {"error": "name and url are required"})
+                return
+            if find_page(pages, name):
+                self._send_json(409, {"error": f"Page watch already exists: {name}"})
+                return
+            categories = [
+                part.strip()
+                for part in str(data.get("categories", "AI Engineering")).split(",")
+                if part.strip()
+            ]
+            pages.append(
+                {
+                    "name": name,
+                    "url": url,
+                    "enabled": bool(data.get("enabled", True)),
+                    "priority": str(data.get("priority", "medium")),
+                    "categories": categories,
+                    "check_interval_hours": int(data.get("check_interval_hours", 24)),
+                }
+            )
+            save_page_watch(self.page_watch_path, pages)
+            self._send_json(200, {"ok": True, "name": name})
+            return
+
+        if path == "/api/page-watch/scan":
+            name = str(data.get("name", "")).strip()
+            page_names = [name] if name else None
+            only_enabled = not bool(data.get("include_disabled", False))
+            if page_names and not only_enabled:
+                only_enabled = False
+            try:
+                report = run_watch_scan(
+                    config=self.page_watch_path,
+                    state_path=self.page_watch_state_path,
+                    insecure_skip_tls_verify=bool(
+                        data.get("insecure_skip_tls_verify", self.insecure_tls)
+                    ),
+                    emit_baseline=bool(data.get("emit_baseline", False)),
+                    only_enabled=only_enabled if not page_names else False,
+                    page_names=page_names,
+                    timeout=int(data.get("timeout", 60)),
+                    link_limit=int(data.get("link_limit", 40)),
+                )
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+                return
+            self._send_json(
+                200,
+                {
+                    "ok": True,
+                    "checked": report["checked"],
+                    "changed": report["changed"],
+                    "results": report["results"],
+                    "items": report["items"],
+                    "summaries": report["summaries"],
+                },
+            )
+            return
+
+        self._send_json(404, {"error": "not found"})
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--config", type=Path, default=default_config_path())
+    parser.add_argument("--page-watch-config", type=Path, default=default_page_watch_config())
+    parser.add_argument("--page-watch-state", type=Path, default=default_page_watch_state())
     parser.add_argument("--no-open-browser", action="store_true")
     parser.add_argument("--insecure-skip-tls-verify", action="store_true", default=True)
     args = parser.parse_args()
 
     ConsoleHandler.config_path = args.config
+    ConsoleHandler.page_watch_path = args.page_watch_config
+    ConsoleHandler.page_watch_state_path = args.page_watch_state
     ConsoleHandler.insecure_tls = args.insecure_skip_tls_verify
     server = ThreadingHTTPServer((args.host, args.port), ConsoleHandler)
     url = f"http://{args.host}:{args.port}/"
-    print(f"RSS source console: {url}")
-    print(f"Config: {args.config}")
+    print(f"Source console: {url}")
+    print(f"RSS config: {args.config}")
+    print(f"Page watch: {args.page_watch_config}")
     if not args.no_open_browser:
         webbrowser.open(url)
     try:
