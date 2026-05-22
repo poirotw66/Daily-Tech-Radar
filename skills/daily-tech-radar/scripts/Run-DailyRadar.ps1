@@ -17,6 +17,7 @@ $skillDir = Split-Path -Parent $scriptDir
 $runPython = Join-Path $scriptDir "Run-Python.ps1"
 $sourceDir = Join-Path $skillDir "data\sources"
 $normalizedDir = Join-Path $skillDir "data\normalized"
+$enrichedDir = Join-Path $skillDir "data\enriched"
 $briefDir = Join-Path $skillDir "output\source_briefs"
 $candidateDir = Join-Path $skillDir "output\candidates"
 $draftDir = Join-Path $skillDir "output\drafts"
@@ -28,7 +29,7 @@ $memoryDir = Join-Path $skillDir "memory"
 $rssConfig = Join-Path $skillDir "config\rss_sources.yaml"
 $scoringConfig = Join-Path $skillDir "config\scoring.yaml"
 
-New-Item -ItemType Directory -Force -Path $sourceDir,$normalizedDir,$briefDir,$candidateDir,$draftDir,$reviewPackageDir,$refinementDir,$healthDir,$logDir,$memoryDir | Out-Null
+New-Item -ItemType Directory -Force -Path $sourceDir,$normalizedDir,$enrichedDir,$briefDir,$candidateDir,$draftDir,$reviewPackageDir,$refinementDir,$healthDir,$logDir,$memoryDir | Out-Null
 
 $tlsFlag = @()
 if ($InsecureSkipTlsVerify) {
@@ -40,6 +41,7 @@ $arxivOutput = Join-Path $sourceDir "$RunDate-arxiv.json"
 $githubOutput = Join-Path $sourceDir "$RunDate-github.json"
 $rawOutput = Join-Path $sourceDir "$RunDate-raw.json"
 $normalizedOutput = Join-Path $normalizedDir "$RunDate-normalized.json"
+$enrichedOutput = Join-Path $enrichedDir "$RunDate-enriched-sources.json"
 $briefOutput = Join-Path $briefDir "$RunDate-source-brief.md"
 $candidatesOutput = Join-Path $candidateDir "$RunDate-candidates.json"
 $scoresOutput = Join-Path $candidateDir "$RunDate-scores.json"
@@ -188,6 +190,19 @@ Invoke-Step -Name "Update topic memory" -Arguments @(
     $RunDate
 )
 
+$enrichArgs = @(
+    (Join-Path $scriptDir "enrich_primary_sources.py"),
+    "--normalized",
+    $normalizedOutput,
+    "--candidates",
+    $candidatesOutput,
+    "--scores",
+    $scoresOutput,
+    "--output",
+    $enrichedOutput
+) + $tlsFlag
+Invoke-Step -Name "Enrich primary source pages" -Arguments $enrichArgs
+
 Invoke-Step -Name "Build Traditional Chinese draft package" -Arguments @(
     (Join-Path $scriptDir "build_draft_package.py"),
     "--candidates",
@@ -195,7 +210,7 @@ Invoke-Step -Name "Build Traditional Chinese draft package" -Arguments @(
     "--scores",
     $scoresOutput,
     "--sources",
-    $normalizedOutput,
+    $enrichedOutput,
     "--run-date",
     $RunDate,
     "--output-dir",
@@ -237,6 +252,7 @@ $log = [ordered]@{
         github = $githubOutput
         raw = $rawOutput
         normalized = $normalizedOutput
+        enriched_sources = $enrichedOutput
         source_brief = $briefOutput
         candidates = $candidatesOutput
         scores = $scoresOutput

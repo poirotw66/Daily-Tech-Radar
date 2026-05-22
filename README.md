@@ -70,7 +70,7 @@ npx skills add "/path/to/Daily Tech Radar" --skill daily-tech-radar --agent curs
 .\skills\daily-tech-radar\scripts\Run-DailyRadar.ps1 -InsecureSkipTlsVerify -PrepareAgentRefinement
 ```
 
-流程概要：擷取來源 → 正規化 → 候選主題與加權評分 → 繁中草稿骨架 →（可選）產生 IDE Agent 精修任務。
+流程概要：擷取來源 → 正規化 → 候選主題與加權評分 → **下載入選主題一級來源全文** → 繁中草稿骨架 →（可選）產生 IDE Agent 精修任務。macOS 或企業 TLS 環境請保留 `-InsecureSkipTlsVerify`，否則全文擷取可能失敗。
 
 需要論文來源時再啟用 arXiv（預設關閉，部分代理 IP 易被限流）：
 

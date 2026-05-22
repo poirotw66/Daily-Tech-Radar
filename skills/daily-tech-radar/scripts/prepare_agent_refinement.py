@@ -28,7 +28,11 @@ You are running inside the user's IDE workspace. Refine the scaffold below and w
 {output_path}
 ```
 
-Do not call external publishing APIs. Do not require an OpenAI API key. Use local context and the provided source metadata. If additional web verification is needed, ask before browsing or clearly mark `需要人工確認`.
+Do not call external publishing APIs. Do not require an OpenAI API key.
+
+Use the provided review package JSON, especially each source's `page_text` when `page_fetch_status` is `ok`. Those excerpts were fetched by the daily pipeline (`enrich_primary_sources.py`), not by ad-hoc IDE browsing. Do not claim you read the full web page if `page_fetch_status` is `failed` or `rss_summary` only.
+
+Only mark `需要人工確認` for claims not supported by `page_text` / `raw_summary`. Do not add a disclaimer that the IDE failed to fetch the blog unless the JSON shows `page_fetch_status: failed`.
 
 ## Input Review Package JSON
 

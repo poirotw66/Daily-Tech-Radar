@@ -34,6 +34,8 @@ Use this skill to run a guarded content workflow, not a free-form news summarize
   - `scripts/fetch_github_repos.py` fetches repositories through the official GitHub REST Search API.
   - `scripts/merge_sources.py` combines source outputs.
   - `scripts/normalize_sources.py` converts raw source JSON into stable source records.
+  - `scripts/enrich_primary_sources.py` fetches full HTML text for the selected topic's primary URLs (use with `-InsecureSkipTlsVerify` on macOS or strict corporate TLS).
+  - `scripts/http_fetch.py` shared HTTP helper (retries, timeouts) used by enrichment.
   - `scripts/build_source_brief.py` creates a human-readable daily source brief.
   - `scripts/generate_candidates_from_sources.py` creates a deterministic first-pass candidate list.
   - `scripts/score_topics.py` calculates weighted candidate scores.

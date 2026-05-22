@@ -5,6 +5,7 @@ skills-lock.json
 
 # Daily Tech Radar generated runtime data
 skills/daily-tech-radar/data/
+skills/daily-tech-radar/data/enriched/
 skills/daily-tech-radar/output/
 skills/daily-tech-radar/memory/
 

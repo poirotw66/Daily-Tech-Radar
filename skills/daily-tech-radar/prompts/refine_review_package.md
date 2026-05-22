@@ -17,10 +17,12 @@ Tasks:
 
 Rules:
 - Do not invent facts or dates.
-- Do not claim you read sources that were not provided.
+- Use `sources[].page_text` when `page_fetch_status` is `ok` (pipeline-fetched full page). Use `raw_summary` only when full-page fetch failed.
+- Do not claim you read sources that were not provided in the JSON.
 - Do not add confidential workplace examples.
 - Do not make investment, legal, or compliance advice.
 - If evidence is insufficient, write `需要人工確認`.
+- Do not state that the IDE could not fetch the blog due to network timeout unless `page_fetch_status` is `failed` in the input.
 
 Return one complete Markdown review package with these sections:
 

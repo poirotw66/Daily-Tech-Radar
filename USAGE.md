@@ -8,7 +8,9 @@ Run the daily local workflow:
 .\skills\daily-tech-radar\scripts\Run-DailyRadar.ps1 -InsecureSkipTlsVerify -PrepareAgentRefinement
 ```
 
-This fetches enabled RSS sources and GitHub REST results, skips arXiv by default, normalizes sources, selects candidate topics, builds a Traditional Chinese draft package, and prepares an IDE-agent refinement task.
+This fetches enabled RSS sources and GitHub REST results, skips arXiv by default, normalizes sources, selects candidate topics, **downloads full HTML for the selected topic's primary URLs** (`enrich_primary_sources.py`), builds a Traditional Chinese draft package, and prepares an IDE-agent refinement task.
+
+On macOS or locked-down TLS environments, keep **`-InsecureSkipTlsVerify`** so RSS and primary-page fetches succeed (otherwise refinement may fall back to RSS summaries only).
 
 Use arXiv only when needed:
 

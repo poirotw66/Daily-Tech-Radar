@@ -36,6 +36,22 @@ def clean_text(text: str) -> str:
     return " ".join(text.split())
 
 
+def load_sources(path: Path) -> list[dict]:
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict) and isinstance(data.get("sources"), list):
+        return data["sources"]
+    raise ValueError(f"Unsupported sources JSON shape: {path}")
+
+
+def primary_body_text(source: dict) -> tuple[str, str]:
+    """Return (body_text, provenance_label)."""
+    if source.get("page_fetch_status") == "ok" and source.get("page_text"):
+        return str(source["page_text"]).strip(), "full_page"
+    return clean_text(source.get("raw_summary", "")), "rss_summary"
+
+
 def slugify(text: str) -> str:
     slug = text.lower()
     slug = re.sub(r"[^a-z0-9\u4e00-\u9fff]+", "-", slug)
@@ -65,7 +81,13 @@ def build_article(candidate: dict, sources: list[dict]) -> str:
     publisher = main_source.get("publisher", "來源")
     published_at = main_source.get("published_at") or "未標示日期"
     source_url = main_source.get("url", "")
-    summary = clean_text(main_source.get("raw_summary", ""))
+    body_text, provenance = primary_body_text(main_source)
+    fetch_note = (
+        "以下依每日流程擷取之官方頁面全文整理（非 IDE 臨時抓取）。"
+        if provenance == "full_page"
+        else "以下僅依 RSS 摘要；全文擷取未成功，精修前請重跑 `enrich_primary_sources` 或檢查 TLS 設定。"
+    )
+    excerpt = body_text[:3500] + ("…" if len(body_text) > 3500 else "")
     core_question = candidate.get("core_question", "")
 
     return f"""# {title}：Agent workflow 進入 runtime 與治理階段
@@ -77,11 +99,11 @@ def build_article(candidate: dict, sources: list[dict]) -> str:
 
 ## 發生了什麼？
 
-根據來源 [{title}]({source_url})，這次更新的來源摘要是：
+根據來源 [{title}]({source_url})，{fetch_note}
 
-> {summary}
+> {excerpt}
 
-這段來源摘要仍需要在正式發布前對照原文確認；以下是基於目前來源資訊產生的初步分析。
+以下是基於上述來源內容產生的初步分析（推論段落需與事實分離閱讀）。
 
 用比較務實的角度看，它指向一個趨勢：Agent 不再只是 prompt 或單次任務，而是逐漸變成需要 runtime、orchestration、access control 與 observability 支撐的 workflow。
 
@@ -138,18 +160,31 @@ def build_article(candidate: dict, sources: list[dict]) -> str:
 
 def build_research(candidate: dict, sources: list[dict]) -> dict:
     source_brief = []
+    any_full_page = False
     for source in sources:
+        body_text, provenance = primary_body_text(source)
+        if provenance == "full_page":
+            any_full_page = True
         source_brief.append(
             {
                 "source_id": source.get("source_id"),
                 "title": source.get("title"),
                 "url": source.get("url"),
+                "page_fetch_status": source.get("page_fetch_status"),
                 "key_points": [
-                    clean_text(source.get("raw_summary", ""))[:300],
+                    body_text[:1200],
                     "This source should be treated as primary evidence only for what it explicitly states.",
                 ],
                 "reliability": source.get("trust_level", "medium"),
             }
+        )
+    uncertainties = [
+        "Claims about real-world impact should be reviewed against the full source before publishing.",
+    ]
+    if not any_full_page:
+        uncertainties.insert(
+            0,
+            "Primary source full-page fetch failed or was skipped; draft uses RSS summary only.",
         )
     return {
         "topic": candidate.get("title"),
@@ -158,10 +193,7 @@ def build_research(candidate: dict, sources: list[dict]) -> dict:
         "verified_facts": [
             f"Primary source title: {source.get('title')}" for source in sources
         ],
-        "uncertainties": [
-            "This deterministic draft has not read beyond collected summaries.",
-            "Claims about real-world impact should be reviewed against the full source before publishing.",
-        ],
+        "uncertainties": uncertainties,
         "possible_angles": [
             "Agent workflow governance",
             "Runtime and access control",
@@ -242,7 +274,7 @@ def main() -> int:
 
     candidates = json.loads(args.candidates.read_text(encoding="utf-8-sig"))
     scores = json.loads(args.scores.read_text(encoding="utf-8-sig"))
-    sources = json.loads(args.sources.read_text(encoding="utf-8-sig"))
+    sources = load_sources(args.sources)
     selected = load_selected(scores, candidates)
     sources_by_id = source_map(sources)
     selected_source_list = selected_sources(selected, sources_by_id)
