@@ -9,8 +9,13 @@ GITHUB_LIMIT="${GITHUB_LIMIT:-8}"
 GITHUB_DAYS="${GITHUB_DAYS:-30}"
 GITHUB_MIN_STARS="${GITHUB_MIN_STARS:-100}"
 INSECURE_SKIP_TLS_VERIFY="${INSECURE_SKIP_TLS_VERIFY:-1}"
-PREPARE_AGENT_REFINEMENT="${PREPARE_AGENT_REFINEMENT:-1}"
+DISCOVER_ONLY="${DISCOVER_ONLY:-1}"
+PREPARE_AGENT_REFINEMENT="${PREPARE_AGENT_REFINEMENT:-0}"
 INCLUDE_ARXIV="${INCLUDE_ARXIV:-0}"
+
+if [[ "${DISCOVER_ONLY}" == "1" ]]; then
+  PREPARE_AGENT_REFINEMENT=0
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -99,11 +104,30 @@ run_step "Build source brief" "${PY}" "${SCRIPT_DIR}/build_source_brief.py" \
 run_step "Generate topic candidates" "${PY}" "${SCRIPT_DIR}/generate_candidates_from_sources.py" \
   "${NORM_OUT}" --limit 5 --topic-memory "${MEMORY}" --output "${CAND_OUT}"
 
+SCORE_EXTRA=()
+if [[ "${DISCOVER_ONLY}" == "1" ]]; then
+  SCORE_EXTRA=(--recommendation-only)
+fi
+
 run_step "Score topic candidates" "${PY}" "${SCRIPT_DIR}/score_topics.py" \
-  "${CAND_OUT}" --scoring "${SKILL_DIR}/config/scoring.yaml" --output "${SCORES_OUT}"
+  "${CAND_OUT}" --scoring "${SKILL_DIR}/config/scoring.yaml" --output "${SCORES_OUT}" "${SCORE_EXTRA[@]}"
 
 run_step "Build topic selection brief" "${PY}" "${SCRIPT_DIR}/build_topic_selection_brief.py" \
   "${SCORES_OUT}" --sources "${NORM_OUT}" --output "${TOPIC_BRIEF}"
+
+run_step "Build source health report" "${PY}" "${SCRIPT_DIR}/build_source_health_report.py" \
+  --logs-dir "${LOG_DIR}" --limit 30 --output "${HEALTH_OUT}"
+
+if [[ "${DISCOVER_ONLY}" == "1" ]]; then
+  echo ""
+  echo "Discover-only run complete (no draft). Review:"
+  echo "  Source brief: ${BRIEF_OUT}"
+  echo "  Topic selection brief: ${TOPIC_BRIEF}"
+  echo "  Page watch brief: ${PAGE_WATCH_BRIEF}"
+  echo "Then pick a candidate_id and run:"
+  echo "  CANDIDATE_ID=<id> ./scripts/run_article_from_pick.sh"
+  exit 0
+fi
 
 run_step "Update topic memory" "${PY}" "${SCRIPT_DIR}/update_topic_memory.py" \
   --scores "${SCORES_OUT}" --memory "${MEMORY}" --run-date "${RUN_DATE}"
@@ -128,11 +152,8 @@ if [[ -n "${RP_JSON}" ]]; then
   fi
 fi
 
-run_step "Build source health report" "${PY}" "${SCRIPT_DIR}/build_source_health_report.py" \
-  --logs-dir "${LOG_DIR}" --limit 30 --output "${HEALTH_OUT}"
-
 echo ""
-echo "Daily Tech Radar source run complete."
+echo "Daily Tech Radar full pipeline complete."
 echo "Source brief: ${BRIEF_OUT}"
 echo "Topic selection brief: ${TOPIC_BRIEF}"
 echo "Enriched sources: ${ENRICHED_OUT}"

@@ -65,6 +65,11 @@ def main() -> int:
     parser.add_argument("candidates", type=Path, help="JSON file containing candidate objects")
     parser.add_argument("--scoring", type=Path, help="Path to scoring.yaml")
     parser.add_argument("-o", "--output", type=Path)
+    parser.add_argument(
+        "--recommendation-only",
+        action="store_true",
+        help="Rank candidates but do not set selected_candidate_id (human picks later)",
+    )
     args = parser.parse_args()
 
     candidates = json.loads(args.candidates.read_text(encoding="utf-8"))
@@ -75,10 +80,29 @@ def main() -> int:
     scored = [score_candidate(candidate, weights) for candidate in candidates]
     scored.sort(key=lambda item: item.get("weighted_score", 0), reverse=True)
 
+    top = scored[0] if scored else None
+    if args.recommendation_only:
+        selected_id = None
+        reason = (
+            "Automated ranking only. Review the topic selection brief and pick a candidate "
+            "before running the article pipeline (select_topic.py / run_article_from_pick.sh)."
+        )
+        if top:
+            reason += f" Top recommendation: `{top.get('candidate_id')}` ({top.get('title')})."
+    else:
+        selected_id = top["candidate_id"] if top else None
+        reason = (
+            f"Auto-selected highest weighted score ({top.get('weighted_score')})."
+            if top
+            else "No candidates to score."
+        )
+
     payload = {
-        "selected_candidate_id": scored[0]["candidate_id"] if scored else None,
+        "selected_candidate_id": selected_id,
+        "recommendation_only": args.recommendation_only,
+        "recommended_candidate_id": top["candidate_id"] if top else None,
         "score_table": scored,
-        "selection_reason": "Selected by weighted score. Review qualitative fit before drafting.",
+        "selection_reason": reason,
     }
 
     output = json.dumps(payload, ensure_ascii=False, indent=2)

@@ -24,19 +24,18 @@ rss_sources:
     categories: [DevTools, Web, AI SDK]
     disabled_reason: Returned malformed XML in the corporate proxy smoke test.
 
-  - name: Hugging Face Blog
-    url: https://huggingface.co/blog/feed.xml
-    enabled: false
-    priority: medium
-    categories: [AI Engineering, Open Source]
-    disabled_reason: Redirect loop in the corporate proxy smoke test.
-
-  - name: LangChain Blog
+  - name: LangChain Blog (legacy host)
     url: https://blog.langchain.com/rss/
     enabled: false
     priority: high
     categories: [Agent, LLM App]
-    disabled_reason: Redirect loop in the corporate proxy smoke test.
+    disabled_reason: Use LangChain Blog (langchain.dev) instead; langchain.com redirect fails behind some proxies.
+
+  - name: LangChain Blog
+    url: https://blog.langchain.dev/rss.xml
+    enabled: true
+    priority: high
+    categories: [Agent, LLM App]
 
   - name: OpenAI News
     url: https://openai.com/news/rss.xml
@@ -67,10 +66,169 @@ rss_sources:
 
   - name: AWS Machine Learning Blog
     url: https://aws.amazon.com/blogs/machine-learning/feed/
-    enabled: false
+    enabled: true
     priority: medium
     categories: [AI Engineering, Cloud, Enterprise]
-    disabled_reason: Candidate source; enable after a local smoke test.
+
+  - name: Hugging Face Blog
+    url: https://huggingface.co/blog/feed.xml
+    enabled: true
+    priority: medium
+    categories: [AI Engineering, Open Source]
+
+  - name: Google Developers Blog
+    url: https://developers.googleblog.com/feeds/posts/default
+    enabled: true
+    priority: medium
+    categories: [AI Engineering, DevTools]
+
+  - name: Stripe Blog
+    url: https://stripe.com/blog/feed.rss
+    enabled: true
+    priority: medium
+    categories: [FinTech AI, Architecture, DevTools]
+
+  - name: Docker Blog
+    url: https://www.docker.com/blog/feed/
+    enabled: true
+    priority: medium
+    categories: [DevTools, Infrastructure]
+
+  - name: Kubernetes Blog
+    url: https://kubernetes.io/feed.xml
+    enabled: false
+    priority: low
+    categories: [Infrastructure, DevTools]
+    disabled_reason: Broad infra signal; enable if you want more platform-release noise in the daily brief.
+
+  - name: JetBrains Blog
+    url: https://blog.jetbrains.com/feed/
+    enabled: true
+    priority: medium
+    categories: [DevTools, AI Coding]
+
+  - name: Cloudflare Blog (AI tag)
+    url: https://blog.cloudflare.com/tag/ai/rss/
+    enabled: true
+    priority: high
+    categories: [AI Engineering, Infrastructure]
+
+  - name: Simon Willison's Weblog
+    url: https://simonwillison.net/atom/everything/
+    enabled: true
+    priority: medium
+    categories: [AI Engineering, LLM App, Agent]
+
+  - name: Netflix Tech Blog
+    url: https://netflixtechblog.com/feed
+    enabled: false
+    priority: low
+    categories: [Architecture, DevTools]
+    disabled_reason: General engineering; enable for wider architecture angles.
+
+  - name: Finextra (AI)
+    url: https://www.finextra.com/rss/channel.aspx?channel=ai
+    enabled: true
+    priority: high
+    categories: [FinTech AI, AI Engineering]
+
+  - name: Finextra Headlines
+    url: https://www.finextra.com/rss/headlines.aspx
+    enabled: true
+    priority: medium
+    categories: [FinTech AI]
+
+  - name: The Fintech Times
+    url: https://thefintechtimes.com/feed/
+    enabled: true
+    priority: medium
+    categories: [FinTech AI]
+
+  - name: PYMNTS
+    url: https://www.pymnts.com/feed/
+    enabled: true
+    priority: medium
+    categories: [FinTech AI, Agent]
+
+  - name: Plaid Blog
+    url: https://www.plaid.com/blog/rss.xml
+    enabled: true
+    priority: high
+    categories: [FinTech AI, LLM App]
+
+  - name: Modern Treasury Journal
+    url: https://www.moderntreasury.com/journal/rss.xml
+    enabled: true
+    priority: high
+    categories: [FinTech AI, Architecture]
+
+  - name: FCA News (UK regulator)
+    url: https://www.fca.org.uk/news/rss.xml
+    enabled: true
+    priority: medium
+    categories: [FinTech AI]
+
+  - name: CrewAI Blog
+    url: https://blog.crewai.com/rss/
+    enabled: true
+    priority: high
+    categories: [Agent, LLM App]
+
+  - name: Microsoft Semantic Kernel
+    url: https://devblogs.microsoft.com/semantic-kernel/feed/
+    enabled: true
+    priority: high
+    categories: [Agent, AI Engineering, Enterprise]
+
+  - name: Interconnects (AI)
+    url: https://www.interconnects.ai/feed
+    enabled: true
+    priority: medium
+    categories: [Agent, AI Engineering, LLM App]
+
+  - name: Latent Space
+    url: https://www.latent.space/feed
+    enabled: true
+    priority: medium
+    categories: [Agent, AI Engineering]
+
+  - name: Google AI (Technology)
+    url: https://blog.google/technology/ai/rss/
+    enabled: true
+    priority: high
+    categories: [AI Engineering, Agent]
+
+  - name: Lilian Weng
+    url: https://lilianweng.github.io/index.xml
+    enabled: true
+    priority: medium
+    categories: [AI Engineering, Agent]
+
+  - name: Eugene Yan
+    url: https://eugeneyan.com/rss/
+    enabled: true
+    priority: medium
+    categories: [LLM App, AI Engineering]
+
+  - name: Sebastian Raschka
+    url: https://magazine.sebastianraschka.com/feed
+    enabled: true
+    priority: medium
+    categories: [AI Engineering]
+
+  - name: LessWrong
+    url: https://www.lesswrong.com/feed.xml
+    enabled: false
+    priority: low
+    categories: [AI Engineering]
+    disabled_reason: Research/community discourse; high volume and off-brand for daily FinTech/Agent editorials.
+
+  - name: AI Alignment Forum
+    url: https://www.alignmentforum.org/feed.xml
+    enabled: false
+    priority: low
+    categories: [AI Engineering]
+    disabled_reason: Same as LessWrong; enable for safety/governance deep dives only.
 
 policy:
   note: Some feeds may fail behind corporate proxy or due to redirect loops. The orchestrator treats RSS sources as recoverable.
@@ -78,5 +236,21 @@ policy:
     - GitHub Blog
     - GitHub AI & ML
     - Cloudflare Blog
+    - Cloudflare Blog (AI tag)
     - OpenAI News
     - InfoQ AI ML Data Engineering
+    - Hugging Face Blog
+    - Google Developers Blog
+    - Google AI (Technology)
+    - AWS Machine Learning Blog
+    - Simon Willison's Weblog
+    - LangChain Blog
+    - CrewAI Blog
+    - Microsoft Semantic Kernel
+    - Finextra (AI)
+    - Plaid Blog
+    - Modern Treasury Journal
+    - Stripe Blog
+  human_workflow:
+    - Run daily discover (default DISCOVER_ONLY=1) to produce source + topic selection briefs.
+    - User picks candidate_id, then run_article_from_pick.sh for draft and review package.

@@ -46,6 +46,24 @@ python3 skills/daily-tech-radar/scripts/manage_sources.py discover https://claud
 
 **Claude Blog（https://claude.com/blog）**：截至自動探索，**沒有公開 RSS/Atom**（常見路徑與 HTML `link rel=alternate` 皆無有效 feed）。`rss_sources.yaml` 已保留一筆停用的「Claude Blog」紀錄（`site_url` + 說明）。相關官方動態可手動參考 [Anthropic Newsroom](https://www.anthropic.com/news)（同樣未確認 RSS）。
 
+## 建議工作流（先探索、你再選題）
+
+1. **每日探索**（預設只彙整，不自動寫稿）  
+   產出 `output/source_briefs/YYYY-MM-DD-source-brief.md` 與 `output/candidates/YYYY-MM-DD-topic-selection-brief.md`（含 3–5 個候選題與評分，**不會**自動選定題目）。
+
+2. **你決定材料**  
+   從選題簡報挑一個 `candidate_id`（也可用系統建議的 `recommended_candidate_id` 當參考）。
+
+3. **寫文流水線**（全文擷取 + 草稿 + 審閱包）  
+   ```bash
+   CANDIDATE_ID=cand-20260521-01 ./skills/daily-tech-radar/scripts/run_article_from_pick.sh
+   ```
+   或先手動寫入選擇：  
+   `python3 skills/daily-tech-radar/scripts/select_topic.py --scores output/candidates/YYYY-MM-DD-scores.json --candidate-id <id>`
+
+若要恢復「一次跑到底、自動選最高分」：  
+`DISCOVER_ONLY=0 PREPARE_AGENT_REFINEMENT=1 ./skills/daily-tech-radar/scripts/run_daily_radar.sh`
+
 ## Daily Run
 
 Run the daily local workflow.
@@ -62,9 +80,9 @@ Run the daily local workflow.
 ./skills/daily-tech-radar/scripts/run_daily_radar.sh
 ```
 
-Defaults: `INSECURE_SKIP_TLS_VERIFY=1`, `PREPARE_AGENT_REFINEMENT=1`. Disable TLS skip: `INSECURE_SKIP_TLS_VERIFY=0 ./skills/daily-tech-radar/scripts/run_daily_radar.sh`
+Defaults: `DISCOVER_ONLY=1`, `INSECURE_SKIP_TLS_VERIFY=1` (explore only; no draft). Disable TLS skip: `INSECURE_SKIP_TLS_VERIFY=0 ./skills/daily-tech-radar/scripts/run_daily_radar.sh`
 
-This fetches enabled RSS sources and GitHub REST results, skips arXiv by default, normalizes sources, selects candidate topics, **downloads full HTML for the selected topic's primary URLs** (`enrich_primary_sources.py`), builds a Traditional Chinese draft package, and prepares an IDE-agent refinement task.
+Discover mode fetches enabled RSS + page watch + GitHub, normalizes sources, and writes source/topic briefs with ranked candidates. Full HTML fetch and draft run only after you execute `run_article_from_pick.sh`.
 
 On macOS or locked-down TLS environments, keep **`-InsecureSkipTlsVerify`** so RSS and primary-page fetches succeed (otherwise refinement may fall back to RSS summaries only).
 

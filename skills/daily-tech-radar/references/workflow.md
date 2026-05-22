@@ -4,6 +4,14 @@
 
 The MVP produces a local Markdown review package only. It does not publish to a CMS, social platform, newsletter service, or scheduler.
 
+## Human-in-the-Loop (Default)
+
+1. **Discover** — `run_daily_radar.sh` (default `DISCOVER_ONLY=1`): source brief + topic selection brief, no draft.
+2. **Pick** — user chooses `candidate_id` from the topic selection brief.
+3. **Write** — `CANDIDATE_ID=... ./scripts/run_article_from_pick.sh`: enrich, draft, review package, optional IDE refinement task.
+
+Legacy one-shot auto-select: `DISCOVER_ONLY=0 PREPARE_AGENT_REFINEMENT=1 ./scripts/run_daily_radar.sh`
+
 ## Recommended Daily Run
 
 Use the orchestrator from the skill root:

@@ -21,13 +21,30 @@ def main() -> int:
         sources = json.loads(args.sources.read_text(encoding="utf-8-sig"))
         source_map = {source.get("source_id"): source for source in sources}
 
+    selected = scores.get("selected_candidate_id")
+    recommended = scores.get("recommended_candidate_id")
+    if scores.get("recommendation_only"):
+        header = (
+            "## Your decision\n\n"
+            "No topic is selected yet. Read the candidates below, pick one `candidate_id`, then run:\n\n"
+            "```bash\n"
+            "CANDIDATE_ID=<candidate_id> ./scripts/run_article_from_pick.sh\n"
+            "```\n\n"
+            f"System ranking suggestion (optional): `{recommended}`\n"
+        )
+        selected_line = "_Pending your pick_"
+    else:
+        header = ""
+        selected_line = f"`{selected}`"
+
     lines = [
         "# Daily Tech Radar Topic Selection Brief",
         "",
-        f"Selected candidate: `{scores.get('selected_candidate_id')}`",
+        f"Selected candidate: {selected_line}",
         "",
         scores.get("selection_reason", ""),
         "",
+        header,
         "## Candidates",
         "",
     ]
@@ -58,13 +75,19 @@ def main() -> int:
                 lines.append(f"- `{source_id}`")
         lines.append("")
 
-    lines.extend(
-        [
+    if scores.get("recommendation_only"):
+        next_step = (
             "## Next Step",
             "",
-            "Use `prompts/research_topic.md` on the selected candidate. If the selected topic feels weak, ask the user to pick another candidate before drafting.",
-        ]
-    )
+            "Choose one candidate, run `run_article_from_pick.sh`, then refine with `prompts/refine_review_package.md`.",
+        )
+    else:
+        next_step = (
+            "## Next Step",
+            "",
+            "Use `prompts/research_topic.md` on the selected candidate, or run `run_article_from_pick.sh` if you changed the pick.",
+        )
+    lines.extend(next_step)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")

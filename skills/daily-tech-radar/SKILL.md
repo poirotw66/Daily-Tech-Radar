@@ -9,15 +9,18 @@ Use this skill to run a guarded content workflow, not a free-form news summarize
 
 ## Operating Mode
 
+**Default human workflow:** daily **discover** (aggregate sources into briefs) → **you choose** one `candidate_id` → **article pipeline** (enrich, draft, review package). Do not auto-draft until the user has picked a topic unless they opt into the legacy full run.
+
 1. Collect recent source items from configured feeds, official pages, repos, papers, and user-provided URLs.
 2. Normalize and deduplicate sources before asking an LLM to reason about them.
-3. Generate 3-5 candidate topics, then score them with the configured rubric.
-4. Research the selected topic with primary and supporting sources.
-5. Draft a Traditional Chinese article using the configured structure and brand voice.
-6. Build a claim-source fact check table and revise overclaims before final packaging.
-7. Generate website, LinkedIn, Threads, Facebook group, newsletter, and SEO variants.
-8. Write a Markdown review package under `output/review_packages/`.
-9. Ask for human review and approval. Never auto-publish without explicit approval.
+3. Build `output/source_briefs/YYYY-MM-DD-source-brief.md` and generate 3-5 ranked candidate topics (`--recommendation-only` scoring; no auto-selection).
+4. **Pause for user decision:** read `output/candidates/YYYY-MM-DD-topic-selection-brief.md`, pick a `candidate_id`, run `scripts/run_article_from_pick.sh` (or `select_topic.py` then the same pipeline).
+5. Research the **user-selected** topic with primary and supporting sources (`enrich_primary_sources.py`).
+6. Draft a Traditional Chinese article using the configured structure and brand voice.
+7. Build a claim-source fact check table and revise overclaims before final packaging.
+8. Generate website, LinkedIn, Threads, Facebook group, newsletter, and SEO variants.
+9. Write a Markdown review package under `output/review_packages/`.
+10. Ask for human review and approval. Never auto-publish without explicit approval.
 
 ## Required Resources
 
@@ -28,7 +31,9 @@ Use this skill to run a guarded content workflow, not a free-form news summarize
 - Use `schemas/` for structured outputs whenever possible.
 - Use scripts for deterministic tasks:
   - `scripts/Run-DailyRadar.ps1` orchestrates the daily source run (Windows).
-  - `scripts/run_daily_radar.sh` same pipeline on macOS/Linux (bash + Python 3).
+  - `scripts/run_daily_radar.sh` daily discover (default `DISCOVER_ONLY=1`) or full auto pipeline when `DISCOVER_ONLY=0`.
+  - `scripts/run_article_from_pick.sh` runs enrich + draft + review package after `CANDIDATE_ID` is set.
+  - `scripts/select_topic.py` writes the user's `selected_candidate_id` into scores JSON.
   - `scripts/html_extract.py` extracts article/main body text from fetched HTML.
   - `scripts/manage_sources.py` lists/enables/disables/adds RSS feeds in `config/rss_sources.yaml`.
   - `scripts/sources_console.py` local web UI (http://127.0.0.1:8765) for RSS and page watch (`/api/page-watch`, scan/toggle/add).
