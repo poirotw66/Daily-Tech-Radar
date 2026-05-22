@@ -2,7 +2,7 @@
 
 ## 網頁變更監控（無 RSS）
 
-適用 **沒有 RSS** 的列表頁／官網（例如 [Claude Blog](https://claude.com/blog)）。以正文指紋比對是否更新；**第一次執行只建立基準**，之後有變化才會產生候選來源訊號。
+適用 **沒有 RSS** 的列表頁／官網（例如 [Claude Blog](https://claude.com/blog)）。以**文章連結列表**比對（新 URL 才觸發）；解析不到連結時才退回正文指紋。**第一次執行只建立連結基準**，之後每個新文章 URL 會各產生一筆來源訊號。
 
 設定檔：`skills/daily-tech-radar/config/page_watch.yaml`（預設含 Claude Blog、Anthropic Newsroom）。
 

@@ -32,7 +32,7 @@ Use this skill to run a guarded content workflow, not a free-form news summarize
   - `scripts/html_extract.py` extracts article/main body text from fetched HTML.
   - `scripts/manage_sources.py` lists/enables/disables/adds RSS feeds in `config/rss_sources.yaml`.
   - `scripts/sources_console.py` local web UI (http://127.0.0.1:8765) for the same RSS settings.
-  - `scripts/watch_pages.py` checks `config/page_watch.yaml` URLs for content changes (no RSS).
+  - `scripts/watch_pages.py` checks listing pages via new article URLs (`page_link_extract.py`), with fingerprint fallback.
   - `scripts/manage_page_watch.py` lists/adds pages and runs a manual watch scan.
   - `scripts/fetch_rss.py` fetches RSS/Atom feeds with the Python standard library.
   - `scripts/fetch_rss_from_config.py` fetches enabled RSS feeds with per-source categories from `config/rss_sources.yaml`.

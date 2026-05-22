@@ -15,8 +15,9 @@ page_watch:
 
 policy:
   note: >
-    Pages without RSS are checked by content fingerprint (main article HTML text).
-    First run stores a baseline only; later runs emit source items when the fingerprint changes.
+    Pages without RSS are checked by article link list on listing pages (Claude Blog, Anthropic Newsroom).
+    First run stores tracked URLs as baseline; later runs emit one source item per new article URL.
+    Content fingerprint is fallback when link extraction returns nothing.
   recommended_pages:
     - Claude Blog
     - Anthropic Newsroom
