@@ -5,63 +5,12 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import fetch_rss
-
-
-def parse_inline_list(value: str) -> list[str]:
-    value = value.strip()
-    if not (value.startswith("[") and value.endswith("]")):
-        return []
-    body = value[1:-1].strip()
-    if not body:
-        return []
-    return [part.strip().strip("'\"") for part in body.split(",") if part.strip()]
-
-
-def parse_rss_config(path: Path) -> list[dict]:
-    sources: list[dict] = []
-    current: dict | None = None
-    in_sources = False
-
-    for raw_line in path.read_text(encoding="utf-8-sig").splitlines():
-        line = raw_line.rstrip()
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if stripped == "rss_sources:":
-            in_sources = True
-            continue
-        if stripped == "policy:":
-            break
-        if not in_sources:
-            continue
-
-        if re.match(r"^\s*-\s+name:\s*", line):
-            if current:
-                sources.append(current)
-            current = {"enabled": True, "categories": []}
-            current["name"] = stripped.split("name:", 1)[1].strip()
-            continue
-        if current is None or ":" not in stripped:
-            continue
-        key, value = stripped.split(":", 1)
-        key = key.strip()
-        value = value.strip()
-        if key == "enabled":
-            current[key] = value.lower() != "false"
-        elif key == "categories":
-            current[key] = parse_inline_list(value)
-        else:
-            current[key] = value
-
-    if current:
-        sources.append(current)
-    return sources
+from rss_config_io import load_rss_sources
 
 
 def main() -> int:
@@ -76,7 +25,7 @@ def main() -> int:
     all_items: list[dict] = []
     errors: list[dict] = []
 
-    for source in parse_rss_config(args.config):
+    for source in load_rss_sources(args.config):
         if not source.get("enabled", True):
             continue
         url = source.get("url")

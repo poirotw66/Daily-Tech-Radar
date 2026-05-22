@@ -44,6 +44,14 @@ rss_sources:
     priority: high
     categories: [AI Engineering, LLM App, Agent]
 
+  - name: Claude Blog
+    site_url: https://claude.com/blog
+    url: ""
+    enabled: false
+    priority: high
+    categories: [Agent, AI Engineering, LLM App]
+    disabled_reason: No public RSS/Atom feed found at claude.com/blog (auto-discovery checked common paths and HTML link tags). Related official news is at https://www.anthropic.com/news (also no confirmed RSS in this project). Re-run discover_rss.py after Anthropic publishes a feed.
+
   - name: InfoQ AI ML Data Engineering
     url: https://feed.infoq.com/ai-ml-data-eng
     enabled: true

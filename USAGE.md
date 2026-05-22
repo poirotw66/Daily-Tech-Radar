@@ -1,5 +1,51 @@
 # Daily Tech Radar Usage
 
+## 網頁變更監控（無 RSS）
+
+適用 **沒有 RSS** 的列表頁／官網（例如 [Claude Blog](https://claude.com/blog)）。以正文指紋比對是否更新；**第一次執行只建立基準**，之後有變化才會產生候選來源訊號。
+
+設定檔：`skills/daily-tech-radar/config/page_watch.yaml`（預設含 Claude Blog、Anthropic Newsroom）。
+
+```bash
+# 手動掃描（寫入簡報與變更項目 JSON）
+python3 skills/daily-tech-radar/scripts/manage_page_watch.py list
+python3 skills/daily-tech-radar/scripts/manage_page_watch.py scan \
+  --insecure-skip-tls-verify \
+  --brief skills/daily-tech-radar/output/page_watch/$(date +%Y-%m-%d)-page-watch-brief.md \
+  --items skills/daily-tech-radar/data/sources/$(date +%Y-%m-%d)-page-watch.json
+
+# 新增頁面
+python3 skills/daily-tech-radar/scripts/manage_page_watch.py add \
+  --name "Example News" --url "https://example.com/news"
+```
+
+**定期執行**：將 `run_daily_radar.sh` 或 `Run-DailyRadar.ps1` 排進 cron / launchd（例如每日 09:00）；該步驟已內建 `watch_pages.py`。狀態保存在 `skills/daily-tech-radar/memory/page_watch_state.json`（已 gitignore）。
+
+## RSS 來源管理
+
+RSS 清單在 `skills/daily-tech-radar/config/rss_sources.yaml`（`enabled: true` 的才會被每日流程擷取）。GitHub REST 與 arXiv 仍由 `Run-DailyRadar.ps1` / `run_daily_radar.sh` 參數控制，不在此檔。
+
+### 瀏覽器主控台（建議）
+
+```bash
+python3 skills/daily-tech-radar/scripts/sources_console.py
+```
+
+預設開啟 http://127.0.0.1:8765/ ，可勾選啟用、新增 Feed、單筆或全部 smoke test。
+
+### 指令列
+
+```bash
+python3 skills/daily-tech-radar/scripts/manage_sources.py list
+python3 skills/daily-tech-radar/scripts/manage_sources.py enable "Vercel Blog"
+python3 skills/daily-tech-radar/scripts/manage_sources.py disable "LangChain Blog" --reason "proxy redirect"
+python3 skills/daily-tech-radar/scripts/manage_sources.py add --name "Example Blog" --url "https://example.com/feed.xml" --categories "AI Engineering"
+python3 skills/daily-tech-radar/scripts/manage_sources.py test --insecure-skip-tls-verify
+python3 skills/daily-tech-radar/scripts/manage_sources.py discover https://claude.com/blog --insecure-skip-tls-verify
+```
+
+**Claude Blog（https://claude.com/blog）**：截至自動探索，**沒有公開 RSS/Atom**（常見路徑與 HTML `link rel=alternate` 皆無有效 feed）。`rss_sources.yaml` 已保留一筆停用的「Claude Blog」紀錄（`site_url` + 說明）。相關官方動態可手動參考 [Anthropic Newsroom](https://www.anthropic.com/news)（同樣未確認 RSS）。
+
 ## Daily Run
 
 Run the daily local workflow.

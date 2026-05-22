@@ -1,0 +1,22 @@
+page_watch:
+  - name: Claude Blog
+    url: https://claude.com/blog
+    enabled: true
+    priority: high
+    categories: [Agent, AI Engineering, LLM App]
+    check_interval_hours: 24
+
+  - name: Anthropic Newsroom
+    url: https://www.anthropic.com/news
+    enabled: true
+    priority: high
+    categories: [Agent, AI Engineering]
+    check_interval_hours: 24
+
+policy:
+  note: >
+    Pages without RSS are checked by content fingerprint (main article HTML text).
+    First run stores a baseline only; later runs emit source items when the fingerprint changes.
+  recommended_pages:
+    - Claude Blog
+    - Anthropic Newsroom

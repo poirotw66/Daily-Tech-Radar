@@ -29,7 +29,7 @@ $memoryDir = Join-Path $skillDir "memory"
 $rssConfig = Join-Path $skillDir "config\rss_sources.yaml"
 $scoringConfig = Join-Path $skillDir "config\scoring.yaml"
 
-New-Item -ItemType Directory -Force -Path $sourceDir,$normalizedDir,$enrichedDir,$briefDir,$candidateDir,$draftDir,$reviewPackageDir,$refinementDir,$healthDir,$logDir,$memoryDir | Out-Null
+New-Item -ItemType Directory -Force -Path $sourceDir,$normalizedDir,$enrichedDir,$briefDir,$candidateDir,$draftDir,$reviewPackageDir,$refinementDir,$healthDir,$logDir,$memoryDir,$pageWatchBriefDir | Out-Null
 
 $tlsFlag = @()
 if ($InsecureSkipTlsVerify) {
@@ -39,6 +39,9 @@ if ($InsecureSkipTlsVerify) {
 $rssOutput = Join-Path $sourceDir "$RunDate-rss.json"
 $arxivOutput = Join-Path $sourceDir "$RunDate-arxiv.json"
 $githubOutput = Join-Path $sourceDir "$RunDate-github.json"
+$pageWatchOutput = Join-Path $sourceDir "$RunDate-page-watch.json"
+$pageWatchBriefDir = Join-Path $skillDir "output\page_watch"
+$pageWatchBriefOutput = Join-Path $pageWatchBriefDir "$RunDate-page-watch-brief.md"
 $rawOutput = Join-Path $sourceDir "$RunDate-raw.json"
 $normalizedOutput = Join-Path $normalizedDir "$RunDate-normalized.json"
 $enrichedOutput = Join-Path $enrichedDir "$RunDate-enriched-sources.json"
@@ -126,11 +129,28 @@ if ($IncludeArxiv) {
 }
 Invoke-Step -Name "Fetch GitHub repos" -Arguments $githubArgs -FallbackOutput $githubOutput
 
+$pageWatchArgs = @(
+    (Join-Path $scriptDir "watch_pages.py"),
+    "--config",
+    (Join-Path $skillDir "config\page_watch.yaml"),
+    "--run-date",
+    $RunDate,
+    "--output-items",
+    $pageWatchOutput,
+    "--output-brief",
+    $pageWatchBriefOutput
+) + $tlsFlag
+Invoke-Step -Name "Watch web pages for updates" -Arguments $pageWatchArgs -FallbackOutput $pageWatchOutput
+if (-not (Test-Path -LiteralPath $pageWatchOutput) -or ((Get-Item -LiteralPath $pageWatchOutput).Length -eq 0)) {
+    "[]" | Set-Content -Encoding UTF8 -LiteralPath $pageWatchOutput
+}
+
 Invoke-Step -Name "Merge sources" -Arguments @(
     (Join-Path $scriptDir "merge_sources.py"),
     $rssOutput,
     $arxivOutput,
     $githubOutput,
+    $pageWatchOutput,
     "--output",
     $rawOutput
 )

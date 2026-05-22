@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daily Tech Radar — RSS 來源主控台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface2: #243044;
+      --border: #2d3a4f;
+      --text: #e8edf4;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+      --accent-dim: #2563b8;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --err: #f87171;
+      --radius: 12px;
+      --shadow: 0 8px 32px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+    header { margin-bottom: 1.5rem; }
+    header h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 .35rem; letter-spacing: -0.02em; }
+    header p { margin: 0; color: var(--muted); font-size: .92rem; }
+    header code { font-family: "JetBrains Mono", monospace; font-size: .8rem; background: var(--surface2); padding: .15rem .4rem; border-radius: 4px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 560px) { .stats { grid-template-columns: 1fr; } }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .85rem 1rem;
+    }
+    .stat .label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    .stat .value { font-size: 1.6rem; font-weight: 700; margin-top: .15rem; }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+    }
+    .panel-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+      padding: 1rem 1.15rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-head h2 { margin: 0; font-size: 1rem; font-weight: 600; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+    input[type="search"], input[type="text"], input[type="url"], select {
+      font: inherit;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: .5rem .65rem;
+    }
+    input[type="search"] { min-width: 200px; }
+    .btn {
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: .5rem .9rem;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      transition: background .15s, border-color .15s;
+    }
+    .btn:hover { border-color: var(--muted); background: #2a3a52; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
+    .btn-ghost { background: transparent; }
+
+    .source-list { padding: .5rem .65rem 1rem; }
+    .source-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: .85rem 1rem;
+      align-items: start;
+      padding: .9rem 1rem;
+      margin: .5rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: background .12s, border-color .12s;
+    }
+    .source-card:hover { background: var(--surface2); border-color: var(--border); }
+    .source-card.off { opacity: .72; }
+    .switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+      margin-top: .2rem;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 24px;
+      cursor: pointer;
+      transition: .2s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: .2s;
+    }
+    .switch input:checked + .slider { background: var(--accent); }
+    .switch input:checked + .slider::before { transform: translateX(20px); }
+
+    .source-title { font-weight: 600; font-size: .98rem; margin: 0 0 .2rem; }
+    .meta { font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .35rem .65rem; align-items: center; }
+    .badge {
+      font-size: .7rem;
+      font-weight: 600;
+      padding: .12rem .45rem;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .badge-on { background: rgba(52,211,153,.15); color: var(--ok); }
+    .badge-off { background: rgba(139,156,179,.15); color: var(--muted); }
+    .badge-warn { background: rgba(251,191,36,.12); color: var(--warn); }
+    .feed-url {
+      font-family: "JetBrains Mono", monospace;
+      font-size: .75rem;
+      color: var(--muted);
+      word-break: break-all;
+      margin-top: .35rem;
+    }
+    .reason { font-size: .78rem; color: var(--warn); margin-top: .4rem; line-height: 1.4; }
+    .card-actions { display: flex; flex-direction: column; gap: .35rem; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem 1rem;
+      padding: 1rem 1.15rem 1.15rem;
+    }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+    .field label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: .3rem; }
+    .field input, .field select { width: 100%; }
+    .field.full { grid-column: 1 / -1; }
+    .form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .5rem; padding-top: .25rem; }
+
+    #toast {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      max-width: 360px;
+      padding: .75rem 1rem;
+      border-radius: 10px;
+      font-size: .88rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.ok { border-color: rgba(52,211,153,.4); }
+    #toast.err { border-color: rgba(248,113,113,.4); }
+
+    .discover-box {
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: .85rem;
+      margin-top: .5rem;
+      font-size: .85rem;
+    }
+    .discover-box ul { margin: .4rem 0 0; padding-left: 1.1rem; color: var(--muted); }
+    .empty { text-align: center; padding: 2rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>RSS 來源主控台</h1>
+      <p>Daily Tech Radar · 寫入 <code>config/rss_sources.yaml</code> · 僅 <strong>enabled</strong> 來源會進入每日擷取</p>
+    </header>
+
+    <div class="stats">
+      <div class="stat"><div class="label">總來源</div><div class="value" id="stat-total">—</div></div>
+      <div class="stat"><div class="label">已啟用</div><div class="value" id="stat-on" style="color:var(--ok)">—</div></div>
+      <div class="stat"><div class="label">已停用</div><div class="value" id="stat-off">—</div></div>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>來源清單</h2>
+        <div class="toolbar">
+          <input type="search" id="filter" placeholder="搜尋名稱或 URL…" aria-label="搜尋" />
+          <button type="button" class="btn" id="btn-test-all">測試已啟用</button>
+          <button type="button" class="btn btn-ghost" id="btn-reload">重新載入</button>
+        </div>
+      </div>
+      <div class="source-list" id="sources-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h2>新增或探索 Feed</h2></div>
+      <div class="form-grid">
+        <div class="field full">
+          <label>網站 / 部落格首頁（探索 RSS）</label>
+          <input type="url" id="discover-url" placeholder="https://claude.com/blog" value="https://claude.com/blog" />
+        </div>
+        <div class="field full form-actions">
+          <button type="button" class="btn btn-primary" id="btn-discover">探索 RSS</button>
+          <button type="button" class="btn" id="btn-preset-claude">套用 Claude Blog 預設</button>
+        </div>
+        <div class="field full" id="discover-result" hidden></div>
+
+        <div class="field">
+          <label>顯示名稱</label>
+          <input type="text" id="add-name" placeholder="Claude Blog" />
+        </div>
+        <div class="field">
+          <label>優先級</label>
+          <select id="add-priority">
+            <option value="high">high</option>
+            <option value="medium" selected>medium</option>
+            <option value="low">low</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Feed URL（探索成功後會自動填入）</label>
+          <input type="url" id="add-url" placeholder="https://example.com/feed.xml" />
+        </div>
+        <div class="field full">
+          <label>分類（逗號分隔）</label>
+          <input type="text" id="add-categories" value="Agent, AI Engineering, LLM App" />
+        </div>
+        <div class="field full form-actions">
+          <button type="button" class="btn btn-primary" id="btn-add">新增來源</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" role="status"></div>
+
+  <script>
+    const listEl = document.getElementById('sources-list');
+    const toastEl = document.getElementById('toast');
+    let allSources = [];
+
+    function toast(msg, ok = true) {
+      toastEl.textContent = msg;
+      toastEl.className = 'show ' + (ok ? 'ok' : 'err');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => toastEl.classList.remove('show'), 4200);
+    }
+
+    function escapeHtml(t) {
+      return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function updateStats(sources) {
+      const on = sources.filter(s => s.enabled).length;
+      document.getElementById('stat-total').textContent = sources.length;
+      document.getElementById('stat-on').textContent = on;
+      document.getElementById('stat-off').textContent = sources.length - on;
+    }
+
+    function renderList(sources) {
+      const q = document.getElementById('filter').value.trim().toLowerCase();
+      const filtered = sources.filter(s => {
+        const blob = (s.name + ' ' + (s.url||'') + ' ' + (s.site_url||'')).toLowerCase();
+        return !q || blob.includes(q);
+      });
+      if (!filtered.length) {
+        listEl.innerHTML = '<div class="empty">沒有符合的來源</div>';
+        return;
+      }
+      listEl.innerHTML = filtered.map(s => {
+        const enabled = !!s.enabled;
+        const noFeed = !(s.url || '').trim();
+        const badge = enabled ? '<span class="badge badge-on">ON</span>' :
+          (noFeed ? '<span class="badge badge-warn">無 RSS</span>' : '<span class="badge badge-off">OFF</span>');
+        const urlLine = (s.url || '').trim()
+          ? `<div class="feed-url">${escapeHtml(s.url)}</div>`
+          : (s.site_url ? `<div class="feed-url">${escapeHtml(s.site_url)} <span class="badge badge-warn">僅網站</span></div>` : '');
+        const reason = s.disabled_reason ? `<div class="reason">${escapeHtml(s.disabled_reason)}</div>` : '';
+        const cats = (s.categories || []).join(', ');
+        return `
+          <article class="source-card ${enabled ? '' : 'off'}" data-name="${escapeHtml(s.name)}">
+            <label class="switch" title="${enabled ? '停用' : '啟用'}">
+              <input type="checkbox" data-toggle="${escapeHtml(s.name)}" ${enabled ? 'checked' : ''} ${noFeed ? 'disabled' : ''} />
+              <span class="slider"></span>
+            </label>
+            <div>
+              <h3 class="source-title">${escapeHtml(s.name)}</h3>
+              <div class="meta">${badge}<span>${escapeHtml(s.priority || 'medium')}</span><span>${escapeHtml(cats)}</span></div>
+              ${urlLine}
+              ${reason}
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn" data-test="${escapeHtml(s.name)}" ${noFeed ? 'disabled' : ''}>測試</button>
+            </div>
+          </article>`;
+      }).join('');
+
+      listEl.querySelectorAll('[data-toggle]').forEach(cb => {
+        cb.addEventListener('change', () => toggleSource(cb.dataset.toggle, cb.checked));
+      });
+      listEl.querySelectorAll('[data-test]').forEach(btn => {
+        btn.addEventListener('click', () => testFeed(btn.dataset.test));
+      });
+    }
+
+    async function loadSources() {
+      const res = await fetch('/api/sources');
+      const data = await res.json();
+      allSources = data.sources || [];
+      updateStats(allSources);
+      renderList(allSources);
+    }
+
+    async function toggleSource(name, enabled) {
+      const res = await fetch('/api/sources/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, enabled })
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || '切換失敗', false); await loadSources(); return; }
+      toast(`${name} → ${enabled ? '已啟用' : '已停用'}`);
+      await loadSources();
+    }
+
+    async function testFeed(name) {
+      toast(`測試 ${name}…`);
+      const res = await fetch('/api/sources/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, insecure_skip_tls_verify: true })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') toast(`${name}：OK（${data.sample_items} 則樣本）`);
+      else toast(`${name}：${data.error || '失敗'}`, false);
+    }
+
+    async function discoverFeed() {
+      const url = document.getElementById('discover-url').value.trim();
+      const box = document.getElementById('discover-result');
+      box.hidden = false;
+      box.className = 'field full discover-box';
+      box.textContent = '探索中…';
+      const res = await fetch('/api/sources/discover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, insecure_skip_tls_verify: true })
+      });
+      const data = await res.json();
+      if (data.recommended_feed) {
+        document.getElementById('add-url').value = data.recommended_feed;
+        box.innerHTML = `<strong style="color:var(--ok)">找到 Feed</strong><div class="feed-url">${escapeHtml(data.recommended_feed)}</div>`;
+        toast('已填入 Feed URL');
+      } else {
+        const tried = (data.feeds || []).filter(f => f.status === 'failed').length;
+        box.innerHTML = `<strong style="color:var(--warn)">未找到可用 RSS</strong>
+          <p style="margin:.35rem 0 0;color:var(--muted)">已檢查 HTML link 標籤與常見路徑（約 ${tried} 個候選失敗）。可保留網站於清單並標為「無 RSS」，或改追蹤其他官方來源。</p>`;
+        toast('此網站可能沒有公開 RSS', false);
+      }
+    }
+
+    document.getElementById('btn-discover').addEventListener('click', discoverFeed);
+    document.getElementById('btn-preset-claude').addEventListener('click', () => {
+      document.getElementById('discover-url').value = 'https://claude.com/blog';
+      document.getElementById('add-name').value = 'Claude Blog';
+      document.getElementById('add-categories').value = 'Agent, AI Engineering, LLM App';
+      document.getElementById('add-priority').value = 'high';
+      discoverFeed();
+    });
+
+    document.getElementById('btn-add').addEventListener('click', async () => {
+      const payload = {
+        name: document.getElementById('add-name').value.trim(),
+        url: document.getElementById('add-url').value.trim(),
+        categories: document.getElementById('add-categories').value.trim(),
+        priority: document.getElementById('add-priority').value,
+        enabled: true
+      };
+      if (!payload.name) { toast('請填寫名稱', false); return; }
+      if (!payload.url) { toast('請先探索或填入 Feed URL', false); return; }
+      const res = await fetch('/api/sources/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || '新增失敗', false); return; }
+      toast(`已新增 ${payload.name}`);
+      await loadSources();
+    });
+
+    document.getElementById('btn-test-all').addEventListener('click', async () => {
+      toast('測試所有已啟用來源…');
+      const res = await fetch('/api/sources/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ insecure_skip_tls_verify: true })
+      });
+      const data = await res.json();
+      const failed = (data.results || []).filter(r => r.status !== 'ok');
+      if (!failed.length) toast('全部已啟用來源測試通過');
+      else toast(`${failed.length} 個來源失敗`, false);
+    });
+
+    document.getElementById('filter').addEventListener('input', () => renderList(allSources));
+    document.getElementById('btn-reload').addEventListener('click', loadSources);
+
+    loadSources().catch(e => toast(String(e), false));
+  </script>
+</body>
+</html>

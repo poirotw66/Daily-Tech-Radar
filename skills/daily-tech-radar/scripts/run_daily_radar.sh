@@ -74,8 +74,21 @@ run_step "Fetch GitHub repos" "${PY}" "${SCRIPT_DIR}/fetch_github_repos.py" \
   --days "${GITHUB_DAYS}" --min-stars "${GITHUB_MIN_STARS}" --per-page "${GITHUB_LIMIT}" \
   "${TLS[@]}" --output "${GITHUB_OUT}"
 
+PAGE_WATCH_OUT="${SOURCE_DIR}/${RUN_DATE}-page-watch.json"
+PAGE_WATCH_BRIEF="${SKILL_DIR}/output/page_watch/${RUN_DATE}-page-watch-brief.md"
+mkdir -p "${SKILL_DIR}/output/page_watch"
+run_step "Watch web pages for updates" "${PY}" "${SCRIPT_DIR}/watch_pages.py" \
+  --config "${SKILL_DIR}/config/page_watch.yaml" \
+  --run-date "${RUN_DATE}" \
+  --output-items "${PAGE_WATCH_OUT}" \
+  --output-brief "${PAGE_WATCH_BRIEF}" \
+  "${TLS[@]}"
+if [[ ! -s "${PAGE_WATCH_OUT}" ]]; then
+  echo '[]' > "${PAGE_WATCH_OUT}"
+fi
+
 run_step "Merge sources" "${PY}" "${SCRIPT_DIR}/merge_sources.py" \
-  "${RSS_OUT}" "${ARXIV_OUT}" "${GITHUB_OUT}" --output "${RAW_OUT}"
+  "${RSS_OUT}" "${ARXIV_OUT}" "${GITHUB_OUT}" "${PAGE_WATCH_OUT}" --output "${RAW_OUT}"
 
 run_step "Normalize sources" "${PY}" "${SCRIPT_DIR}/normalize_sources.py" \
   "${RAW_OUT}" --output "${NORM_OUT}"
@@ -125,4 +138,5 @@ echo "Topic selection brief: ${TOPIC_BRIEF}"
 echo "Enriched sources: ${ENRICHED_OUT}"
 echo "Draft dir: ${DRAFT_OUT}"
 echo "Refinement dir: ${REFINE_DIR}/${RUN_DATE}"
+echo "Page watch brief: ${PAGE_WATCH_BRIEF}"
 echo "Next: ask the IDE agent to run the latest refinement task, or refine the Markdown package manually."
