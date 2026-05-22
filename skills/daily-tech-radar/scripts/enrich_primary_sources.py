@@ -9,35 +9,21 @@ text, and writes an enriched normalized source list for draft/refinement.
 from __future__ import annotations
 
 import argparse
-import html
 import json
-import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from http_fetch import fetch_bytes
+from html_extract import html_to_text
 
 
 ENRICH_TYPES = {"official_blog", "docs", "news", "launch"}
-STRIP_TAGS = re.compile(r"<(script|style|noscript|svg)[^>]*>.*?</\1>", re.IGNORECASE | re.DOTALL)
-TAG_RE = re.compile(r"<[^>]+>")
-WS_RE = re.compile(r"\s+")
 
 
 def now_utc() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-
-
-def html_to_text(raw_html: str, max_chars: int) -> str:
-    text = STRIP_TAGS.sub(" ", raw_html)
-    text = TAG_RE.sub(" ", text)
-    text = html.unescape(text)
-    text = WS_RE.sub(" ", text).strip()
-    if len(text) > max_chars:
-        return text[:max_chars] + "\n\n[truncated]"
-    return text
 
 
 def load_selected_source_ids(scores: dict, candidates: list[dict]) -> list[str]:

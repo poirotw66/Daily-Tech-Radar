@@ -18,7 +18,7 @@
 | [Python 3](https://www.python.org/) | 擷取與轉換腳本（以標準函式庫為主，無額外 `requirements.txt`） |
 | 網路 | 存取已啟用的 RSS、GitHub API；企業環境若遇 TLS 問題可使用 `-InsecureSkipTlsVerify` |
 
-在 macOS / Linux 上請從專案根目錄執行下列 PowerShell 指令（需已安裝 `pwsh`）。
+在 macOS / Linux 上請從專案根目錄執行 bash 編排腳本（見下方）；Windows 使用 PowerShell 版本。
 
 ## Install with skills CLI
 
@@ -66,9 +66,11 @@ npx skills add "/path/to/Daily Tech Radar" --skill daily-tech-radar --agent curs
 
 ### 每日執行（建議）
 
-```powershell
-.\skills\daily-tech-radar\scripts\Run-DailyRadar.ps1 -InsecureSkipTlsVerify -PrepareAgentRefinement
+```bash
+./skills/daily-tech-radar/scripts/run_daily_radar.sh
 ```
+
+（Windows：`Run-DailyRadar.ps1 -InsecureSkipTlsVerify -PrepareAgentRefinement`）
 
 流程概要：擷取來源 → 正規化 → 候選主題與加權評分 → **下載入選主題一級來源全文** → 繁中草稿骨架 →（可選）產生 IDE Agent 精修任務。macOS 或企業 TLS 環境請保留 `-InsecureSkipTlsVerify`，否則全文擷取可能失敗。
 

@@ -27,7 +27,9 @@ Use this skill to run a guarded content workflow, not a free-form news summarize
 - Use `prompts/` for LLM steps rather than inventing new prompt chains.
 - Use `schemas/` for structured outputs whenever possible.
 - Use scripts for deterministic tasks:
-  - `scripts/Run-DailyRadar.ps1` orchestrates the daily source run.
+  - `scripts/Run-DailyRadar.ps1` orchestrates the daily source run (Windows).
+  - `scripts/run_daily_radar.sh` same pipeline on macOS/Linux (bash + Python 3).
+  - `scripts/html_extract.py` extracts article/main body text from fetched HTML.
   - `scripts/fetch_rss.py` fetches RSS/Atom feeds with the Python standard library.
   - `scripts/fetch_rss_from_config.py` fetches enabled RSS feeds with per-source categories from `config/rss_sources.yaml`.
   - `scripts/fetch_arxiv.py` fetches papers through the official arXiv Atom API.

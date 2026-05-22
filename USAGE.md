@@ -2,11 +2,21 @@
 
 ## Daily Run
 
-Run the daily local workflow:
+Run the daily local workflow.
+
+**Windows (PowerShell):**
 
 ```powershell
 .\skills\daily-tech-radar\scripts\Run-DailyRadar.ps1 -InsecureSkipTlsVerify -PrepareAgentRefinement
 ```
+
+**macOS / Linux (bash):**
+
+```bash
+./skills/daily-tech-radar/scripts/run_daily_radar.sh
+```
+
+Defaults: `INSECURE_SKIP_TLS_VERIFY=1`, `PREPARE_AGENT_REFINEMENT=1`. Disable TLS skip: `INSECURE_SKIP_TLS_VERIFY=0 ./skills/daily-tech-radar/scripts/run_daily_radar.sh`
 
 This fetches enabled RSS sources and GitHub REST results, skips arXiv by default, normalizes sources, selects candidate topics, **downloads full HTML for the selected topic's primary URLs** (`enrich_primary_sources.py`), builds a Traditional Chinese draft package, and prepares an IDE-agent refinement task.
 

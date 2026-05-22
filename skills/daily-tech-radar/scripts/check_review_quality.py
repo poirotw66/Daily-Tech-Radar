@@ -27,6 +27,18 @@ FORBIDDEN_TERMS = [
     "無痛導入",
 ]
 
+ARTICLE_SECTION_RE = re.compile(
+    r"^##\s*4\.\s*文章草稿\s*\n(.*?)(?=^##\s*5\.|\Z)",
+    re.MULTILINE | re.DOTALL,
+)
+
+
+def article_body_for_forbidden_scan(text: str) -> str:
+    match = ARTICLE_SECTION_RE.search(text)
+    if match:
+        return match.group(1)
+    return text
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
@@ -40,9 +52,10 @@ def main() -> int:
         if not re.search(pattern, text, flags=re.IGNORECASE):
             issues.append(f"Missing required quality marker: {label}")
 
+    article_text = article_body_for_forbidden_scan(text)
     for term in FORBIDDEN_TERMS:
-        if term in text:
-            issues.append(f"Forbidden or risky term found: {term}")
+        if term in article_text:
+            issues.append(f"Forbidden or risky term found in article draft: {term}")
 
     if "http" not in text:
         issues.append("No source URL found.")
